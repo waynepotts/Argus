@@ -11,6 +11,12 @@
 #include "ArgusGameModeBase.h"
 #include "Systems/SpawningSystems.h"
 
+AArgusAIController::AArgusAIController()
+{
+	UMemoryComponent* memory = CreateDefaultSubobject<UMemoryComponent>(TEXT("MemoryComponent"));
+	m_memoryComponent = memory;
+}
+
 void AArgusAIController::UpdateHiddenActors()
 {
 	m_hiddenActors.Empty();
@@ -92,7 +98,7 @@ void  AArgusAIController::FilterArgusActorsToPlayerTeam(TArray<AArgusActor*>& ar
 	);
 
 }
-bool  AArgusAIController::IsArgusActorOnPlayerTeam(const AArgusActor* const actor) const
+bool  AArgusAIController::IsArgusActorOnPlayerTeam(const AArgusActor* actor) const
 {
 	ARGUS_RETURN_ON_NULL_BOOL(actor, ArgusUnrealObjectsLog);
 
@@ -122,22 +128,27 @@ bool AArgusAIController::HasRequiredEntities()
 	if (GetArgusActorsFromArgusEntityIds(EntityIds, argusActors))
 	{
 		FilterArgusActorsToPlayerTeam(argusActors);
-		TSet<TSubclassOf<AArgusActor>> foundClasses;
+		TSet<TSubclassOf<AArgusActor>> requiredClasses(m_requiredClasses);
+
 		for (AArgusActor* actor : argusActors)
 		{
+			if (requiredClasses.IsEmpty())
+			{
+				return true;
+			}
 			if (!actor)
 			{
 				continue;
 			}
-			for (TSubclassOf<AArgusActor>& requiredClass : m_requiredClasses)
+			for (TSubclassOf<AArgusActor>& requiredClass : requiredClasses.Array())
 			{
 				if (actor->IsA(requiredClass))
 				{
-					foundClasses.Add(requiredClass);
+					requiredClasses.Remove(requiredClass);
 				}
 			}
 		}
-		return foundClasses.Num() == m_requiredClasses.Num();
+		return requiredClasses.IsEmpty();
 	}
 	
 	return false;
@@ -173,4 +184,62 @@ TArray<AArgusActor*> AArgusAIController::GetArgusActorsWithTeamRelationship(cons
 {
 
 	return TArray<AArgusActor*>();
+}
+
+AArgusActor* AArgusAIController::GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
+{
+	TArray<AArgusActor*> allActors = GetAllTeamActors();
+	AArgusActor* nearestActor = nullptr;
+	double distance = 999999999.0f;
+	for (AArgusActor* actor : allActors)
+	{
+		if (actor->IsA(actorClass) && actor->IsIdle())
+		{
+			if (nearestActor)
+			{
+				double otherDistance = FVector::Dist(nearestActor->GetActorLocation(), location);
+				if (distance > otherDistance)
+				{
+					nearestActor = actor;
+					distance = otherDistance;
+				}
+			}
+			else
+			{
+				nearestActor = actor;
+				distance = FVector::Dist(nearestActor->GetActorLocation(), location);
+			}
+		}
+	}
+	return nearestActor;
+}
+
+void AArgusAIController::UpdateMemory()
+{
+	m_memoryComponent->UpdateMemory();
+}
+
+bool AArgusAIController::HasAnyMemories()
+{
+	return m_memoryComponent->HasAnyMemories();
+}
+
+bool AArgusAIController::SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location)
+{
+	return m_memoryComponent->SeenActorOfClass(actorClass, location);
+}
+
+void AArgusAIController::AddMemory(AArgusActor* actor, const FLocationMemory& memory)
+{
+	m_memoryComponent->AddMemory(actor, memory);
+}
+
+void AArgusAIController::RemoveExpiredMemories(const float currentTime)
+{
+	m_memoryComponent->RemoveExpiredMemories(currentTime);
+}
+
+FVector AArgusAIController::ActorGetNearestLocationToSearch(const FVector location, const double range)
+{
+	return m_memoryComponent->GetNearestLocationToSearch(location, range);
 }

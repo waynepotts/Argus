@@ -233,6 +233,15 @@ AArgusActor* AArgusActor::GetCurrentTargetActor() const
 	return nullptr;
 }
 
+bool AArgusActor::IsIdle() const
+{
+	return (m_entity) ? m_entity.IsIdle(): false;
+}
+
+bool AArgusActor::IsMoveable() const
+{
+	return (m_entity) ? m_entity.IsMoveable() : false;
+}
 inline void AArgusActor::SetMoveToLocation_Implementation(FVector targetLocation, bool bClearWaypoints)
 {
 	ArgusEntity selectedEntity = GetEntity();

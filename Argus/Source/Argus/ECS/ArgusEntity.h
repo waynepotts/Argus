@@ -65,6 +65,7 @@ public:
 	bool IsUnderAttack() const;
 	void ClearUnderAttackStatus() const;
 	bool HasExtractableResources() const;
+	bool IsOnEnemyTeam(ETeam team) const;
 
 	const UArgusActorRecord* GetAssociatedActorRecord() const;
 

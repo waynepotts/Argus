@@ -6,7 +6,7 @@
 
 void UCheckRequiredEntities::OnArgusStartTask()
 {
-	bool bSuccss = false;
+	bool bSuccss = true;
 	if (m_aiController)
 	{
 		bSuccss = m_aiController->HasRequiredEntities();

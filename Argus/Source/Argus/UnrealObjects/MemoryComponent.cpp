@@ -23,7 +23,6 @@ UMemoryComponent::UMemoryComponent()
 void UMemoryComponent::BeginPlay()
 {
 	Super::BeginPlay();
-	UpdateMemory();
 }
 
 
@@ -31,25 +30,24 @@ void UMemoryComponent::BeginPlay()
 void UMemoryComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-	UpdateMemory();
+	//UpdateMemory();
 	// ...
 }
 
-void UMemoryComponent::ReomveExpiredMemories(const float currentTime)
+void UMemoryComponent::RemoveExpiredMemories(const float currentTime)
 {
 	{
 		TArray<AArgusActor*> keysToRemove;
-		for (auto& [actor, mem] : m_MemoryMap)
+		for (auto& [actor, mem] : m_memoryMap)
 		{
 			if (!UKismetSystemLibrary::IsValid(actor) || mem.IsExpired(currentTime))
 			{
-				
 					keysToRemove.Add(actor);
 			}
 		}
 		for (const AArgusActor* key : keysToRemove)
 		{
-			m_MemoryMap.Remove(key);
+			m_memoryMap.Remove(key);
 		}
 	}
 }
@@ -60,17 +58,17 @@ void UMemoryComponent::UpdateMemory()
 	UWorld* world = GetWorld();
 	if (!world)
 	{
-		m_MemoryMap.Empty();
+		//m_memoryMap.Empty();
 		return;
 	}
 	UArgusGameInstance* argusGameInstance = Cast<UArgusGameInstance>(world->GetGameInstance());
 	if (!argusGameInstance)
 	{
-		m_MemoryMap.Empty();
+		//m_memoryMap.Empty();
 		return;
 	}
-	const float time = world->GetTimeSeconds();
-	ReomveExpiredMemories(time);
+	const double time = world->GetTimeSeconds();
+	RemoveExpiredMemories(time);
 	if (IArgusController* argusController = Cast<IArgusController>(GetOwner()))
 	{
 		ETeam playerTeam = argusController->GetControlledTeam();
@@ -79,30 +77,163 @@ void UMemoryComponent::UpdateMemory()
 		{
 			ArgusEntity entity = ArgusEntity::RetrieveEntity(entityId);
 			// ignore entities on our team
-			if (entity.IsOnTeam(playerTeam))
-			{
-				continue;
-			}
+			
+			
 			// create a memory if it's not on our team, it can be killed or has extractable resources, and we can see it.
-			if (entity.IsAlive() || entity.HasExtractableResources())
-			{
-				if (AArgusActor* argusActor = argusGameInstance->GetArgusActorFromArgusEntity(entity))
-				{
-					if (!argusActor)
-					{
-						continue;
-					}
 
-					if (argusActor->IsSeenBy(playerTeam))
+			if (AArgusActor* argusActor = argusGameInstance->GetArgusActorFromArgusEntity(entity))
+			{
+				if (!argusActor)
+				{
+					continue;
+				}
+				if (entity.IsOnTeam(playerTeam))
+				{
+					AddVisitedLocation(argusActor->GetActorLocation(), time);
+					continue;
+				}
+
+				if (argusActor->IsSeenBy(playerTeam))
+				{
+					bool bHasResources = entity.HasExtractableResources();
+					bool bIsEnemy = entity.IsOnEnemyTeam(playerTeam) && entity.IsAlive();
+					if (bHasResources)
 					{
-						m_MemoryMap.Add(argusActor, FLocationMemory(time, argusActor->GetActorLocation(), m_memoryLifetime));
+						AddResourcesSeen(argusActor->GetActorLocation(), time);
+						AddMemory(argusActor, FLocationMemory(time, argusActor->GetActorLocation(), m_memoryLifetime));
+					}
+					if (bIsEnemy)
+					{
+						AddEnemySeen(argusActor->GetActorLocation(), time);
+						AddMemory(argusActor, FLocationMemory(time, argusActor->GetActorLocation(), m_memoryLifetime));
 					}
 				}
 			}
 		}
+		
 	}
 		
 	
 }
+
+void UMemoryComponent::AddMemory(AArgusActor* actor, const FLocationMemory& memory)
+{
+	m_memoryMap.Add(actor, memory);
+}
+
+bool UMemoryComponent::HasAnyMemories()
+{
+	return m_memoryMap.Num() > 0;
+}
+
+bool UMemoryComponent::SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location)
+{
+	if (m_memoryMap.Num() > 0)
+	{
+
+		for (auto& [actor, mem] : m_memoryMap)
+		{
+			if (actor->IsA(actorClass))
+			{
+				location = actor->GetActorLocation();
+				return true;
+			}
+		}
+	}
+	else
+	{
+		UpdateMemory();
+	}
+
+	return false;
+}
+
+void UMemoryComponent::AddEnemySeen(const FVector location, const double currentTime)
+{
+	FVector loc = CreateHeatMapKey(location);
+	FVector4 loc4 = FVector4(1.0f, 0.0f, currentTime, 0.0f);
+	if (m_heatMap.Contains(loc))
+	{
+		FVector4 mapped = m_heatMap[loc];
+		loc4.X += mapped.X;
+		loc4.Y += mapped.Y;
+		loc4.Z += currentTime;
+	}
+	m_heatMap.Add(loc, loc4);
+}
+
+void UMemoryComponent::AddResourcesSeen(const FVector location, const double currentTime)
+{
+	FVector loc = CreateHeatMapKey(location);
+	FVector4 loc4 = FVector4(0.0f, 1.0f, currentTime, 0.0f);
+	if (m_heatMap.Contains(loc))
+	{
+		FVector4 mapped = m_heatMap[loc];
+		loc4.X += mapped.X;
+		loc4.Y += mapped.Y;
+		loc4.Z += currentTime;
+	}
+	m_heatMap.Add(loc, loc4);
+}
+
+void UMemoryComponent::AddVisitedLocation(const FVector location, const double currentTime)
+{
+	FVector loc = CreateHeatMapKey(location);
+	FVector4 loc4 = FVector4(0.0f, 0.0f, currentTime, 0.0f);
+	if (m_heatMap.Contains(loc))
+	{
+		FVector4 mapped = m_heatMap[loc];
+		loc4.X = mapped.X;
+		loc4.Y = mapped.Y;
+		loc4.Z += currentTime;
+	}
+	m_heatMap.Add(loc, loc4);
+}
+
+FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, const double range)
+{
+	UWorld* world = GetWorld();
+	if (!world)
+	{
+		return FVector();
+	}
+	double time = world->GetTimeSeconds() - 10.0;
+	int32 xMax = int32(location.X) / 100 * 100 + range;
+	int32 yMax = int32(location.Y) / 100 * 100 + range;
+	int32 xMin = xMax - range * 2;
+	int32 yMin = yMax - range * 2;
+	TSet<FVector> locationsToCheck;
+	for (int32 x = xMin; x <= xMax; x += 100)
+	{
+		for (int32 y = yMin; y <= yMax; y += 100)
+		{
+			FVector loc = FVector(x, y, 0.0f);
+			locationsToCheck.Add(loc);
+		}
+	}
+	locationsToCheck.Remove(CreateHeatMapKey(location));
+	FVector foundLocation = *locationsToCheck.FindArbitraryElement();
+	for (FVector loc : locationsToCheck.Array())
+	{
+		if (!m_heatMap.Contains(loc))
+		{
+			if (FVector::Dist(loc, location) < FVector::Dist(foundLocation, location))
+			{
+				foundLocation = loc;
+			}
+		}
+		else
+		{
+			if (FVector::Dist(loc, location) < FVector::Dist(foundLocation, location) && m_heatMap[loc].Z < time)
+			{
+				foundLocation = loc;
+				time = m_heatMap[loc].Z;
+			}
+		}
+	}
+	return foundLocation;
+}
+
+
 
 

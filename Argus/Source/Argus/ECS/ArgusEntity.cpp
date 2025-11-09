@@ -476,6 +476,21 @@ bool ArgusEntity::HasExtractableResources() const
 	return false;
 }
 
+bool ArgusEntity::IsOnEnemyTeam(ETeam team) const
+{
+	if (!DoesEntityExist(m_id))
+	{
+		return false;
+	}
+
+	const IdentityComponent* identityComponent = GetComponent<IdentityComponent>();
+	if (identityComponent)
+	{
+		return identityComponent->IsEnemyTeam(team);
+	}
+	return false;
+}
+
 const UArgusActorRecord* ArgusEntity::GetAssociatedActorRecord() const
 {
 	if (!DoesEntityExist(m_id))

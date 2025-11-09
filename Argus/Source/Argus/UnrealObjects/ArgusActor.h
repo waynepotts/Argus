@@ -61,6 +61,12 @@ public:
 
 	UFUNCTION(BlueprintCallable, BlueprintPure = true)
 	AArgusActor* GetCurrentTargetActor() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = true)
+	bool IsIdle() const;
+
+	UFUNCTION(BlueprintCallable, BlueprintPure = true)
+	bool IsMoveable() const;
 	/**
 	* Used to show the current waypoints for this actor. Use in conjuction with GetCurrentWaypoints() to get the locations
 	*/

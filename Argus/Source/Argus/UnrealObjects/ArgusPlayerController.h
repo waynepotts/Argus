@@ -11,7 +11,6 @@
 #include "Kismet/GameplayStatics.h"
 
 #include "ArgusController.h"
-#include "MemoryComponent.h"
 
 #include "ArgusPlayerController.generated.h"
 
@@ -94,9 +93,6 @@ public:
 	EArgusCursorType GetArgusCursor() const;
 	
 	ETeam GetControlledTeam() override { return m_playerTeam; }
-
-	UPROPERTY(BlueprintReadWrite, EditAnywhere)
-	UMemoryComponent* m_memoryComponent;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)

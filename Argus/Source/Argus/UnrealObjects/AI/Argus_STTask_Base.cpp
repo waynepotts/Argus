@@ -11,6 +11,7 @@ EStateTreeRunStatus UArgus_STTask_Base::EnterState(FStateTreeExecutionContext& C
     }
 
     OnArgusStartTask();
+   
 
     return Super::EnterState(Context, Transition);
 }

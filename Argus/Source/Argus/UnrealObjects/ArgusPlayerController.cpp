@@ -14,12 +14,9 @@
 #include "ReticleActor.h"
 #include "Slate/SceneViewport.h"
 
-#include "MemoryComponent.h"
 
 AArgusPlayerController::AArgusPlayerController()
 {
-	m_memoryComponent = CreateDefaultSubobject<UMemoryComponent>(TEXT("MemoryComponent"));
-	AddOwnedComponent(m_memoryComponent);
 }
 
 void AArgusPlayerController::ProcessArgusPlayerInput(float deltaTime)

@@ -88,4 +88,9 @@ struct IdentityComponent
 	{
 		return m_seenBy & m_enemies;
 	}
+
+	bool IsEnemyTeam(ETeam team) const
+	{
+		return m_enemies & (static_cast<uint8>(team));
+	}
 };
