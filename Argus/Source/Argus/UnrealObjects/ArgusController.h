@@ -31,9 +31,14 @@ public:
 
 	virtual TArray<TSubclassOf<AArgusActor>> GetRequredEntityClasses();	
 
+	virtual bool GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors) = 0;
+	virtual bool GetArgusActorsFromArgusEntities(const TArray<ArgusEntity>& inArgusEntities, TArray<AArgusActor*>& outArgusActors) = 0;
+
 	virtual TArray<AArgusActor*> GetAllTeamActors();
 
 	virtual TArray<AArgusActor*> GetAllArgusActors();
 
 	virtual TArray<AArgusActor*> GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships);
+
+	virtual AArgusActor* GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector);
 };

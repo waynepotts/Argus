@@ -22,7 +22,7 @@ void URandomLocationInRange::OnArgusStartTask()
 		UWorld* world = GetWorld();
 		if (world)
 		{
-			FVector location = m_aiController->ActorGetNearestLocationToSearch(actor->GetActorLocation(), m_range);
+			FVector location = m_aiController->GetNearestLocationToSearch(actor->GetActorLocation(), m_range);
 			UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(world);
 			if (navSystem)
 			{

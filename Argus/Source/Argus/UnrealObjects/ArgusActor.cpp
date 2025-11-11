@@ -561,6 +561,18 @@ void AArgusActor::FixupTransformForFlying()
 	SetActorLocationAndRotation(transformComponent->m_location, FRotator(0.0f, ArgusMath::GetUEYawDegreesFromYaw(transformComponent->GetCurrentYaw()), 0.0f));
 }
 
+ETeam AArgusActor::GetTeam() const
+{
+	if (m_entity)
+	{
+		if (const IdentityComponent* identityComponent = m_entity.GetComponent<IdentityComponent>())
+		{
+			return identityComponent->m_team;
+		}
+	}
+	return ETeam::None;
+}
+
 void AArgusActor::OnArgusEntityAbilityAtLocation_Implementation(int32 abilityId, FVector location)
 {
 	if (abilityId < 0 || abilityId > 3)

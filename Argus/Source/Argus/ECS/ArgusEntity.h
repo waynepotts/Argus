@@ -67,6 +67,8 @@ public:
 	bool HasExtractableResources() const;
 	bool IsOnEnemyTeam(ETeam team) const;
 
+	ETeamRelationship GetTeamRelationship(const ETeam team) const;
+
 	const UArgusActorRecord* GetAssociatedActorRecord() const;
 
 #if !UE_BUILD_SHIPPING

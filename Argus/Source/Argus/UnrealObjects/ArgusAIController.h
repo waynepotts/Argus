@@ -7,6 +7,7 @@
 #include "ArgusController.h"
 #include "ComponentDefinitions/IdentityComponent.h"
 #include "MemoryComponent.h"
+#include "HasMemory.h"
 #include "ArgusAIController.generated.h"
 
 class AArgusActor;
@@ -27,8 +28,8 @@ public:
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	void UpdateHiddenActors();
-	bool GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors) const;
-	bool GetArgusActorsFromArgusEntities(const TArray<ArgusEntity>& inArgusEntities, TArray<AArgusActor*>& outArgusActors) const;
+	bool GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors) override;
+	bool GetArgusActorsFromArgusEntities(const TArray<ArgusEntity>& inArgusEntities, TArray<AArgusActor*>& outArgusActors) override;
 	ETeam GetPlayerTeam() const { return m_playerTeam; }
 
 	ETeam GetControlledTeam() override { return m_playerTeam; }
@@ -62,7 +63,7 @@ public:
 	* @param location The location to search from.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	AArgusActor* GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector);
+	AArgusActor* GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	void UpdateMemory() override;
@@ -70,7 +71,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	void RemoveExpiredMemories(const float currentTime) override;
 
-	FVector ActorGetNearestLocationToSearch(const FVector location, const double range);
+	FVector GetNearestLocationToSearch(const FVector location, const double range) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	bool HasAnyMemories() override;
@@ -80,6 +81,11 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	void AddMemory(AArgusActor* actor, const FLocationMemory& memory) override;
+
+	void AddEnemySeen(const FVector location, const double currentTime) override;
+
+	void AddResourcesSeen(const FVector location, const double currentTime) override;
+	void AddVisitedLocation(const FVector location, const double currentTime) override;
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")

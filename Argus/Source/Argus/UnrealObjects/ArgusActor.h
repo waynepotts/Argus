@@ -149,6 +149,8 @@ protected:
 	void UpdateUIWidgetComponentLocation();
 	void FixupTransformForFlying();
 
+	ETeam GetTeam() const;
+
 private:
 	ArgusEntity m_entity = ArgusEntity::k_emptyEntity;
 	bool m_isSelected = false;

@@ -197,15 +197,15 @@ FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, con
 	{
 		return FVector();
 	}
-	double time = world->GetTimeSeconds() - 10.0;
+	double time = world->GetTimeSeconds() - 60.0;
 	int32 xMax = int32(location.X) / 100 * 100 + range;
 	int32 yMax = int32(location.Y) / 100 * 100 + range;
 	int32 xMin = xMax - range * 2;
 	int32 yMin = yMax - range * 2;
 	TSet<FVector> locationsToCheck;
-	for (int32 x = xMin; x <= xMax; x += 100)
+	for (int32 x = xMin; x <= xMax; x += 200)
 	{
-		for (int32 y = yMin; y <= yMax; y += 100)
+		for (int32 y = yMin; y <= yMax; y += 200)
 		{
 			FVector loc = FVector(x, y, 0.0f);
 			locationsToCheck.Add(loc);

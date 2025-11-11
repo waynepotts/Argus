@@ -38,4 +38,14 @@ public:
 
 	virtual void AddMemory(AArgusActor* actor, const FLocationMemory& memory);
 
+	virtual void AddEnemySeen(const FVector location, const double currentTime);
+
+	virtual void AddResourcesSeen(const FVector location, const double currentTime);
+	virtual void AddVisitedLocation(const FVector location, const double currentTime);
+
+	virtual FVector GetNearestLocationToSearch(FVector location, const double range);
+
+	virtual FVector CreateHeatMapKey(const FVector location) { return FVector((int32(location.X) / 100) * 100, (int32(location.Y) / 100) * 100, 0.0f); };
+
+
 };

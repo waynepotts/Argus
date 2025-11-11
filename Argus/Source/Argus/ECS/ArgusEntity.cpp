@@ -491,6 +491,28 @@ bool ArgusEntity::IsOnEnemyTeam(ETeam team) const
 	return false;
 }
 
+ETeamRelationship ArgusEntity::GetTeamRelationship(const ETeam team) const
+{
+	if (!DoesEntityExist(m_id))
+	{
+		return ETeamRelationship::NONE;
+	}
+
+	if(const IdentityComponent* identityComponent = GetComponent<IdentityComponent>())
+	{
+		if (identityComponent->m_team == ETeam::None)
+		{
+			return ETeamRelationship::NEUTRAL;
+		}
+		if (identityComponent->m_team == team)
+		{
+			return ETeamRelationship::SAMETEAM;
+		}
+		return identityComponent->IsEnemyTeam(team) ? ETeamRelationship::ENEMY : ETeamRelationship::ALLY;
+	}
+	return ETeamRelationship::NONE;
+}
+
 const UArgusActorRecord* ArgusEntity::GetAssociatedActorRecord() const
 {
 	if (!DoesEntityExist(m_id))

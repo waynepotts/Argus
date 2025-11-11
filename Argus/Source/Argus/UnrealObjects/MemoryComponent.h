@@ -53,10 +53,10 @@ public:
 
 	bool SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location) override;
 
-	void AddEnemySeen(const FVector location, const double currentTime);
+	void AddEnemySeen(const FVector location, const double currentTime) override;
 
-	void AddResourcesSeen(const FVector location, const double currentTime);
-	void AddVisitedLocation(const FVector location, const double currentTime);
+	void AddResourcesSeen(const FVector location, const double currentTime) override;
+	void AddVisitedLocation(const FVector location, const double currentTime) override;
 
 	UFUNCTION(BlueprintCallable)
 	FVector GetNearestLocationToSearch(FVector location, const double range);

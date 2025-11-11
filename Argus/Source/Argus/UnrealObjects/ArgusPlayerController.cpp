@@ -107,7 +107,7 @@ AArgusActor* AArgusPlayerController::GetArgusActorForArgusEntity(const ArgusEnti
 	return gameInstance->GetArgusActorFromArgusEntity(entity);
 }
 
-bool AArgusPlayerController::GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors) const
+bool AArgusPlayerController::GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors)
 {
 	outArgusActors.SetNumZeroed(inArgusEntityIds.Num());
 
@@ -125,7 +125,7 @@ bool AArgusPlayerController::GetArgusActorsFromArgusEntityIds(const TArray<uint1
 	return true;
 }
 
-bool AArgusPlayerController::GetArgusActorsFromArgusEntities(const TArray<ArgusEntity>& inArgusEntities, TArray<AArgusActor*>& outArgusActors) const
+bool AArgusPlayerController::GetArgusActorsFromArgusEntities(const TArray<ArgusEntity>& inArgusEntities, TArray<AArgusActor*>& outArgusActors)
 {
 	outArgusActors.SetNumZeroed(inArgusEntities.Num());
 

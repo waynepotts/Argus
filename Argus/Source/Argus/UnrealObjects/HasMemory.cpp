@@ -30,3 +30,10 @@ void IHasMemory::AddMemory(AArgusActor* actor, const FLocationMemory& memory)
 {
 
 }
+
+void IHasMemory::AddEnemySeen(const FVector location, const double currentTime) {}
+
+void IHasMemory::AddResourcesSeen(const FVector location, const double currentTime) {}
+void IHasMemory::AddVisitedLocation(const FVector location, const double currentTime) {}
+
+FVector IHasMemory::GetNearestLocationToSearch(FVector location, const double range) { return FVector(); }
