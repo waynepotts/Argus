@@ -985,6 +985,7 @@ void UArgusInputManager::ProcessMoveToInputEventPerSelectedActor(AArgusActor* ar
 			{
 				AvoidanceSystems::DecrementIdleEntitiesInGroup(selectedEntity);
 				taskComponent->m_movementState = inputMovementState;
+				taskComponent->m_queuedCommands.Reset();
 			}
 			
 			targetingComponent->m_targetEntityId = targetEntity.GetId();
@@ -997,6 +998,7 @@ void UArgusInputManager::ProcessMoveToInputEventPerSelectedActor(AArgusActor* ar
 		{
 			AvoidanceSystems::DecrementIdleEntitiesInGroup(selectedEntity);
 			taskComponent->m_movementState = inputMovementState;
+			taskComponent->m_queuedCommands.Reset();
 		}
 		
 		targetingComponent->m_targetEntityId = ArgusEntity::k_emptyEntity.GetId();

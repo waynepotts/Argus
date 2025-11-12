@@ -5,8 +5,30 @@
 #include "ArgusMacros.h"
 #include "ComponentDependencies/TaskComponentStates.h"
 #include "ComponentObservers/TaskComponentObservers.h"
+
+#include "ComponentDependencies/ArgusDeque.h"
 #include "CoreMinimal.h"
 
+struct QueuedTask
+{
+	FVector m_targetLocation = FVector::ZeroVector;
+	uint16 m_targetEntityId = 0u;
+	EMovementState m_movementState = EMovementState::None;
+	EAbilityState m_abilityState = EAbilityState::None;
+	EConstructionState m_constructionState = EConstructionState::None;
+	ECombatState m_combatState = ECombatState::None;
+	EResourceExtractionState m_resourceExtractionState = EResourceExtractionState::None;
+	
+	QueuedTask(uint16 targetEntityId) : m_targetEntityId(targetEntityId) 
+	{
+		m_movementState = EMovementState::ProcessMoveToEntityCommand;
+	}
+
+	QueuedTask(FVector targetLocation) : m_targetLocation(targetLocation) 
+	{
+		m_movementState = EMovementState::ProcessMoveToLocationCommand;
+	}
+};
 struct TaskComponent
 {
 	ARGUS_COMPONENT_SHARED;
@@ -34,6 +56,9 @@ struct TaskComponent
 	ARGUS_IGNORE()
 	EResourceExtractionState m_resourceExtractionState = EResourceExtractionState::None;
 
+	ARGUS_IGNORE()
+	ArgusDeque<QueuedTask, ArgusContainerAllocator<10> > m_queuedCommands;
+
 	ARGUS_OBSERVABLE_PROPERTY_DECLARATION(EFlightState, m_flightState, EFlightState::Grounded)
 
 	bool IsExecutingMoveTask() const
@@ -51,5 +76,8 @@ struct TaskComponent
 		m_combatState = ECombatState::None;
 		m_resourceExtractionState = EResourceExtractionState::None;
 		Set_m_flightState(EFlightState::Grounded);
+		m_queuedCommands.Reset();
 	}
+
+	
 };

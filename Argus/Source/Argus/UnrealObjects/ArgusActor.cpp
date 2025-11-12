@@ -242,6 +242,7 @@ bool AArgusActor::IsMoveable() const
 {
 	return (m_entity) ? m_entity.IsMoveable() : false;
 }
+
 inline void AArgusActor::SetMoveToLocation_Implementation(FVector targetLocation, bool bClearWaypoints)
 {
 	ArgusEntity selectedEntity = GetEntity();
@@ -322,6 +323,36 @@ inline void AArgusActor::SetMoveToActor_Implementation(AActor* targetActor, bool
 		}
 	}
 
+}
+
+inline void AArgusActor::StartNextQueuedTask()
+{
+	
+	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
+	{
+		if (taskComponent->m_queuedCommands.Num() > 0)
+		{
+			TargetingComponent* targetingComponent = m_entity.GetComponent<TargetingComponent>();
+			QueuedTask queuedTask = taskComponent->m_queuedCommands[0];
+			taskComponent->m_queuedCommands.PopFirst();
+			if (queuedTask.m_movementState == EMovementState::ProcessMoveToEntityCommand)
+			{
+				ArgusEntity targetEntity = ArgusEntity::RetrieveEntity(queuedTask.m_targetEntityId);
+				if (targetEntity.IsAlive())
+				{
+					targetingComponent->m_targetEntityId = queuedTask.m_targetEntityId;
+					targetingComponent->m_targetLocation.Reset();
+					taskComponent->m_movementState = queuedTask.m_movementState;
+				}
+			}
+			else if (queuedTask.m_movementState == EMovementState::ProcessMoveToLocationCommand)
+			{
+				targetingComponent->m_targetEntityId = ArgusEntity::k_emptyEntity.GetId();
+				targetingComponent->m_targetLocation = queuedTask.m_targetLocation;
+				taskComponent->m_movementState = queuedTask.m_movementState;
+			}
+		}
+	}
 }
 void AArgusActor::BeginPlay()
 {
@@ -445,6 +476,7 @@ void AArgusActor::Update(float deltaTime, ETeam activePlayerControllerTeam)
 				ShowArgusEntityCombatState(taskComponent->m_combatState);
 				if (identityComponent->m_team == activePlayerControllerTeam)
 				{
+
 					if (taskComponent->m_movementState == EMovementState::ProcessMoveToLocationCommand)
 					{
 						SetCurrentTargetVisible(m_isSelected);
@@ -462,6 +494,12 @@ void AArgusActor::Update(float deltaTime, ETeam activePlayerControllerTeam)
 			ShowArgusEntityCombatState(ECombatState::None);
 			Hide();
 		}
+		if (IsIdle())
+		{
+			StartNextQueuedTask();
+		}
+		
+		
 	}
 }
 
@@ -609,3 +647,31 @@ void AArgusActor::OnArgusEntityAbility_Implementation(int32 abilityId)
 {
 	OnArgusEntityAbilityAtLocation(abilityId, GetActorLocation());
 }
+
+void AArgusActor::QyeueMoveToLocation(FVector targetLocation)
+{
+	TargetingComponent* targetingComponent = m_entity.GetComponent<TargetingComponent>();
+	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
+	{
+		if (taskComponent->m_queuedCommands.Num() < taskComponent->m_queuedCommands.Max())
+		{
+			QueuedTask moveToLocationCommand(targetLocation);
+			taskComponent->m_queuedCommands.PushLast(moveToLocationCommand);
+		}
+	}
+}
+
+void AArgusActor::QyeueInteractWithActor(AArgusActor* targetActor)
+{
+	TargetingComponent* targetingComponent = m_entity.GetComponent<TargetingComponent>();
+	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
+	{
+		if (taskComponent->m_queuedCommands.Num() < taskComponent->m_queuedCommands.Max())
+		{
+			QueuedTask moveToLocationCommand(targetActor->GetEntity().GetId());
+			taskComponent->m_queuedCommands.PushLast(moveToLocationCommand);
+		}
+	}
+}
+
+		
