@@ -268,8 +268,8 @@ inline void AArgusActor::SetMoveToLocation_Implementation(FVector targetLocation
 	{
 		AvoidanceSystems::DecrementIdleEntitiesInGroup(selectedEntity);
 		taskComponent->m_movementState = inputMovementState;
+		taskComponent->m_queuedCommands.Reset();
 	}
-	navigationComponent->ResetPath();
 	navigationComponent->Reset();
 	targetingComponent->m_targetEntityId = ArgusEntity::k_emptyEntity.GetId();
 	targetingComponent->m_targetLocation = targetLocation;
@@ -320,6 +320,7 @@ inline void AArgusActor::SetMoveToActor_Implementation(AActor* targetActor, bool
 
 			targetingComponent->m_targetEntityId = targetEntity.GetId();
 			targetingComponent->m_targetLocation.Reset();
+			taskComponent->m_queuedCommands.Reset();
 		}
 	}
 
@@ -497,6 +498,18 @@ void AArgusActor::Update(float deltaTime, ETeam activePlayerControllerTeam)
 		if (IsIdle())
 		{
 			StartNextQueuedTask();
+		}
+		else
+		{
+			// check if this team can see the target actor, if not then stop moving.
+			AArgusActor* currentTargetActor = GetCurrentTargetActor();
+			if (currentTargetActor)
+			{
+				if (!currentTargetActor->IsSeenBy(activePlayerControllerTeam))
+				{
+					SetMoveToLocation(GetActorLocation(), true);
+				}
+			}
 		}
 		
 		
