@@ -42,14 +42,14 @@ TArray<AArgusActor*> IArgusController::GetArgusActorsWithTeamRelationship(const 
 	return allActors.FilterByPredicate([relationships, team](AArgusActor* actor) { return relationships.Contains(actor->GetEntity().GetTeamRelationship(team)); });
 }
 
-AArgusActor* IArgusController::GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
+AArgusActor* IArgusController::GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
 {
 	TArray<AArgusActor*> allActors = GetAllTeamActors();
 	AArgusActor* nearestActor = nullptr;
 	double distance = 999999999.0f;
 	for (AArgusActor* actor : allActors)
 	{
-		if (actor->IsA(actorClass) && actor->IsIdle())
+		if (actor->IsA(actorClass))
 		{
 			if (nearestActor)
 			{
@@ -68,4 +68,9 @@ AArgusActor* IArgusController::GetNearestIdleActorOfClass(TSubclassOf<AArgusActo
 		}
 	}
 	return nearestActor;
+}
+
+float IArgusController::GetTeamThreatLevel(ETeam team)
+{
+	return 1.0f;
 }

@@ -142,7 +142,7 @@ bool UMemoryComponent::SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector&
 	}
 	else
 	{
-		UpdateMemory();
+		//UpdateMemory();
 	}
 
 	return false;

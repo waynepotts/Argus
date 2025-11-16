@@ -10,7 +10,7 @@ void URandomLocationInRange::OnArgusStartTask()
 	AArgusActor* actor = nullptr;
 	for (TSubclassOf<AArgusActor> actorClass : m_actorClasses)
 	{
-		AArgusActor* nearest = m_aiController->GetNearestIdleActorOfClass(actorClass);
+		AArgusActor* nearest = m_aiController->GetNearestTeamActorOfClass(actorClass);
 		if (nearest)
 		{
 			actor = nearest;

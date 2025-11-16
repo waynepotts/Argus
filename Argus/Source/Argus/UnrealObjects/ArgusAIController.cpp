@@ -26,25 +26,28 @@ void AArgusAIController::UpdateHiddenActors()
 	const UArgusGameInstance* gameInstance = world->GetGameInstance<UArgusGameInstance>();
 	ARGUS_RETURN_ON_NULL(gameInstance, ArgusUnrealObjectsLog);
 
-	for (auto& entityId : gameInstance->GetAllRegisteredArgusEntityIds())
+
+	for (auto& argusActor : GetAllTeamActors())
 	{
-		ArgusEntity argusEntity = ArgusEntity::RetrieveEntity(entityId);
-		if (argusEntity == ArgusEntity::k_emptyEntity)
+		AArgusActor* argusTargetActor = argusActor->GetCurrentTargetActor();
+		if (argusTargetActor)
 		{
-			continue;
-		}
-		if (const IdentityComponent* identityComponent = argusEntity.GetComponent<IdentityComponent>())
-		{
-			if (identityComponent->m_team != m_playerTeam)
+			ArgusEntity argusEntity = argusTargetActor->GetEntity();
+			if (const IdentityComponent* identityComponent = argusEntity.GetComponent<IdentityComponent>())
 			{
-				if (!identityComponent->IsSeenBy(m_playerTeam))
+				if (identityComponent->m_team != m_playerTeam)
 				{
-					AArgusActor* argusActor = gameInstance->GetArgusActorFromArgusEntity(argusEntity);
-					m_hiddenActors.Add(argusActor);
+					if (!identityComponent->IsSeenBy(m_playerTeam))
+					{
+						argusActor->SetMoveToLocation(argusActor->GetActorLocation(), true);
+					}
 				}
 			}
 		}
+
 	}
+	ResourceComponent* teamResourceComponent = ArgusEntity::GetTeamEntity(m_playerTeam).GetComponent<ResourceComponent>();
+
 }
 
 bool AArgusAIController::GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors)
@@ -182,14 +185,14 @@ TArray<AArgusActor*> AArgusAIController::GetAllArgusActors()
 
 TArray<AArgusActor*> AArgusAIController::GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships)
 {
-
-	return TArray<AArgusActor*>();
+	// just call the parent, this is just to expose to blueprint
+	return IArgusController::GetArgusActorsWithTeamRelationship(relationships);
 }
 
-AArgusActor* AArgusAIController::GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
+AArgusActor* AArgusAIController::GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
 {
 	// just call the parent, this is just to expose to blueprint
-	return IArgusController::GetNearestIdleActorOfClass(actorClass, location);
+	return IArgusController::GetNearestTeamActorOfClass(actorClass, location);
 }
 
 void AArgusAIController::UpdateMemory()

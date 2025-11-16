@@ -495,24 +495,11 @@ void AArgusActor::Update(float deltaTime, ETeam activePlayerControllerTeam)
 			ShowArgusEntityCombatState(ECombatState::None);
 			Hide();
 		}
+
 		if (IsIdle())
 		{
 			StartNextQueuedTask();
-		}
-		else
-		{
-			// check if this team can see the target actor, if not then stop moving.
-			AArgusActor* currentTargetActor = GetCurrentTargetActor();
-			if (currentTargetActor)
-			{
-				if (!currentTargetActor->IsSeenBy(activePlayerControllerTeam))
-				{
-					SetMoveToLocation(GetActorLocation(), true);
-				}
-			}
-		}
-		
-		
+		}		
 	}
 }
 
@@ -685,6 +672,44 @@ void AArgusActor::QyeueInteractWithActor(AArgusActor* targetActor)
 			taskComponent->m_queuedCommands.PushLast(moveToLocationCommand);
 		}
 	}
+}
+
+TArray<AArgusActor*> AArgusActor::GetArgusActorsInSightRange() const
+{
+	if (m_entity)
+	{
+		if(const NearbyEntitiesComponent* nearbyEntitiesComponent = m_entity.GetComponent<NearbyEntitiesComponent>())
+		{
+			const UWorld* world = GetWorld();
+			if (!world)
+			{
+				return TArray<AArgusActor*>();
+			}
+
+			const UArgusGameInstance* gameInstance = world->GetGameInstance<UArgusGameInstance>();
+			if (!gameInstance)
+			{
+				return TArray<AArgusActor*>();
+			}
+			
+			TSet<uint16> entityIds(nearbyEntitiesComponent->m_nearbyEntities.GetEntityIdsInSightRange());
+			entityIds = entityIds.Union(TSet<uint16>(nearbyEntitiesComponent->m_nearbyEntities.GetEntityIdsInRangedRange()));
+			entityIds = entityIds.Union(TSet<uint16>(nearbyEntitiesComponent->m_nearbyEntities.GetEntityIdsInMeleeRange()));
+			entityIds = entityIds.Union(TSet<uint16>(nearbyEntitiesComponent->m_nearbyEntities.GetEntityIdsInAvoidanceRange()));
+			entityIds = entityIds.Union(TSet<uint16>(nearbyEntitiesComponent->m_nearbyEntities.GetEntityIdsInFlockingRange()));
+			TArray<AArgusActor*> foundActors;
+			foundActors.Reserve(entityIds.Num());
+			for(const auto& i: entityIds)
+			{
+				if(AArgusActor* actor = gameInstance->GetArgusActorFromArgusEntity(ArgusEntity::RetrieveEntity(i)))
+				{
+					foundActors.Add(actor);
+				}
+			}
+			return foundActors;
+		}
+	}
+	return TArray<AArgusActor*>();
 }
 
 		

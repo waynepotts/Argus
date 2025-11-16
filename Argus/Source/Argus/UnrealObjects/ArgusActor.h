@@ -137,6 +137,13 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void QyeueInteractWithActor(AArgusActor* targetActor);
 
+	/**
+	* Returns all of the argus actors within this actors sight range. 
+	* N.B. doesn't check team affiliation, if alive, or line of sight. It just returns all actors within the targeting component sight sight range bubble.
+	*/
+	UFUNCTION(BlueprintCallable)
+	TArray<AArgusActor*> GetArgusActorsInSightRange() const;
+
 	UPROPERTY(BlueprintReadOnly, EditAnywhere)
 	TSoftClassPtr<UArgusActorInfoView> m_argusActorInfoWidgetClass = nullptr;
 

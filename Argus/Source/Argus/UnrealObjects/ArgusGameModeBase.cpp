@@ -53,6 +53,11 @@ void AArgusGameModeBase::StartPlay()
 	m_argusSystemsThread.StartThread();
 }
 
+void AArgusGameModeBase::RegisterArgusAIController(ETeam team, AArgusAIController* argusAIController)
+{
+	m_teamController.Add(team, argusAIController);
+}
+
 void AArgusGameModeBase::Tick(float deltaTime)
 {
 	ARGUS_TRACE(AArgusGameModeBase::Tick);

@@ -40,5 +40,7 @@ public:
 
 	virtual TArray<AArgusActor*> GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships);
 
-	virtual AArgusActor* GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector);
+	virtual AArgusActor* GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector);
+
+	virtual float GetTeamThreatLevel(ETeam team);
 };

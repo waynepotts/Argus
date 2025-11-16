@@ -125,6 +125,7 @@ void ResourceSystems::ProcessResourceDepositing(const ResourceSystemsArgs& compo
 	if (!TargetingSystems::IsInMeleeRangeOfOtherEntity(components.m_entity, targetEntity))
 	{
 		components.m_taskComponent->m_resourceExtractionState = EResourceExtractionState::DispatchedToDeposit;
+		components.m_taskComponent->m_movementState = EMovementState::ProcessMoveToEntityCommand;
 		return;
 	}
 	components.m_taskComponent->m_resourceExtractionState = EResourceExtractionState::Depositing;

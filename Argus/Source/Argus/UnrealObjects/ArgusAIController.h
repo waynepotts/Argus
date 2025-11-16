@@ -63,7 +63,7 @@ public:
 	* @param location The location to search from.
 	*/
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	AArgusActor* GetNearestIdleActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector) override;
+	AArgusActor* GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector) override;
 
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	void UpdateMemory() override;

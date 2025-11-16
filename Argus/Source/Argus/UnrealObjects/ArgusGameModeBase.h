@@ -11,6 +11,7 @@
 #include "GameFramework/GameModeBase.h"
 #include "RecordDefinitions/TeamColorRecord.h"
 #include "ArgusController.h"
+#include "ArgusAIController.h"
 #include "ArgusGameModeBase.generated.h"
 
 class AArgusPlayerController;
@@ -31,6 +32,9 @@ public:
 	virtual void StartPlay() override;
 
 	AArgusPlayerController* GetActivePlayerController() const { return m_activePlayerController.Get(); }
+
+	UFUNCTION(BlueprintCallable)
+	void RegisterArgusAIController(ETeam team, AArgusAIController* argusAIController);
 
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Singleton")

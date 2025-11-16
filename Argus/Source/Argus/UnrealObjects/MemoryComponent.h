@@ -51,6 +51,7 @@ public:
 
 	bool HasAnyMemories() override;
 
+	UFUNCTION(BlueprintCallable)
 	bool SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location) override;
 
 	void AddEnemySeen(const FVector location, const double currentTime) override;
