@@ -59,6 +59,11 @@ public:
 	void AddResourcesSeen(const FVector location, const double currentTime) override;
 	void AddVisitedLocation(const FVector location, const double currentTime) override;
 
+	void RemoveMemory(AArgusActor* actor) override;
+
+	UFUNCTION(BlueprintCallable)
+	bool GetMemory(AArgusActor* actor, FLocationMemory& memory) override;
+
 	UFUNCTION(BlueprintCallable)
 	FVector GetNearestLocationToSearch(FVector location, const double range);
 

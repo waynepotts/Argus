@@ -47,5 +47,8 @@ public:
 
 	virtual FVector CreateHeatMapKey(const FVector location) { return FVector((int32(location.X) / 100) * 100, (int32(location.Y) / 100) * 100, 0.0f); };
 
+	virtual void RemoveMemory(AArgusActor* actor);
+
+	virtual bool GetMemory(AArgusActor* actor, FLocationMemory& memory);
 
 };

@@ -234,6 +234,21 @@ FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, con
 	return foundLocation;
 }
 
+void UMemoryComponent::RemoveMemory(AArgusActor* actor)
+{
+	m_memoryMap.Remove(actor);
+}
+
+bool UMemoryComponent::GetMemory(AArgusActor* actor, FLocationMemory& memory)
+{
+	if (m_memoryMap.Contains(actor))
+	{
+		memory = m_memoryMap[actor];
+		return true;
+	}
+	return false;
+}
+
 
 
 

@@ -87,9 +87,13 @@ public:
 	void AddResourcesSeen(const FVector location, const double currentTime) override;
 	void AddVisitedLocation(const FVector location, const double currentTime) override;
 
+	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
+	void RemoveMemory(AArgusActor* actor) override;
+
+	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
+	bool GetMemory(AArgusActor* actor, FLocationMemory& memory) override;
+
 protected:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
-	TSet<TSoftObjectPtr<AArgusActor>> m_hiddenActors;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
 	ETeam m_playerTeam = ETeam::TeamA;

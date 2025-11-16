@@ -37,3 +37,12 @@ void IHasMemory::AddResourcesSeen(const FVector location, const double currentTi
 void IHasMemory::AddVisitedLocation(const FVector location, const double currentTime) {}
 
 FVector IHasMemory::GetNearestLocationToSearch(FVector location, const double range) { return FVector(); }
+
+void IHasMemory::RemoveMemory(AArgusActor* actor)
+{
+}
+
+bool IHasMemory::GetMemory(AArgusActor* actor, FLocationMemory& memory)
+{
+	return false;
+}

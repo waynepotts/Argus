@@ -19,14 +19,6 @@ AArgusAIController::AArgusAIController()
 
 void AArgusAIController::UpdateHiddenActors()
 {
-	m_hiddenActors.Empty();
-	const UWorld* world = GetWorld();
-	ARGUS_RETURN_ON_NULL(world, ArgusUnrealObjectsLog);
-
-	const UArgusGameInstance* gameInstance = world->GetGameInstance<UArgusGameInstance>();
-	ARGUS_RETURN_ON_NULL(gameInstance, ArgusUnrealObjectsLog);
-
-
 	for (auto& argusActor : GetAllTeamActors())
 	{
 		AArgusActor* argusTargetActor = argusActor->GetCurrentTargetActor();
@@ -46,8 +38,6 @@ void AArgusAIController::UpdateHiddenActors()
 		}
 
 	}
-	ResourceComponent* teamResourceComponent = ArgusEntity::GetTeamEntity(m_playerTeam).GetComponent<ResourceComponent>();
-
 }
 
 bool AArgusAIController::GetArgusActorsFromArgusEntityIds(const TArray<uint16>& inArgusEntityIds, TArray<AArgusActor*>& outArgusActors)
@@ -217,14 +207,27 @@ void AArgusAIController::AddMemory(AArgusActor* actor, const FLocationMemory& me
 
 void AArgusAIController::AddEnemySeen(const FVector location, const double currentTime)
 {
+	m_memoryComponent->AddEnemySeen(location, currentTime);
 }
 
 void AArgusAIController::AddResourcesSeen(const FVector location, const double currentTime)
 {
+	m_memoryComponent->AddResourcesSeen(location, currentTime);
 }
 
 void AArgusAIController::AddVisitedLocation(const FVector location, const double currentTime)
 {
+	m_memoryComponent->AddVisitedLocation(location, currentTime);
+}
+
+void AArgusAIController::RemoveMemory(AArgusActor* actor)
+{
+	m_memoryComponent->RemoveMemory(actor);
+}
+
+bool AArgusAIController::GetMemory(AArgusActor* actor, FLocationMemory& memory)
+{
+	return m_memoryComponent->GetMemory(actor, memory);
 }
 
 void AArgusAIController::RemoveExpiredMemories(const float currentTime)
