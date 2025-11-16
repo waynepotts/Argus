@@ -121,6 +121,8 @@ void FogOfWarSystems::SetRevealedStatePerEntity(FogOfWarComponent* fogOfWarCompo
 	ARGUS_TRACE(FogOfWarSystems::SetRevealedPixels);
 	ARGUS_RETURN_ON_NULL(fogOfWarComponent, ArgusECSLog);
 
+	fogOfWarComponent->m_revealEntityTasks.Reset();
+
 	InputInterfaceComponent* inputInterfaceComponent = ArgusEntity::RetrieveEntity(ArgusECSConstants::k_singletonEntityId).GetComponent<InputInterfaceComponent>();
 	ARGUS_RETURN_ON_NULL(inputInterfaceComponent, ArgusECSLog);
 
@@ -157,32 +159,44 @@ void FogOfWarSystems::SetRevealedStatePerEntity(FogOfWarComponent* fogOfWarCompo
 			continue;
 		}
 
-		FogOfWarOffsets offsets;
-		PopulateOffsetsForEntity(fogOfWarComponent, components, offsets);
+		fogOfWarComponent->m_revealEntityTasks.Add(UE::Tasks::Launch(ARGUS_NAMEOF(FogOfWarSystems::RevealPixelAlphaForEntity), [&fogOfWarComponent, i]()
+		{
+			FogOfWarSystemsArgs components;
+			if (!components.PopulateArguments(ArgusEntity::RetrieveEntity(i)))
+			{
+				return;
+			}
 
-		const uint32 centerPixel = GetPixelNumberFromWorldSpaceLocation(fogOfWarComponent, components.m_transformComponent->m_location);
-		const bool newCenterPixel = centerPixel != components.m_fogOfWarLocationComponent->m_fogOfWarPixel;
-		if (newCenterPixel && entity.IsAlive() && components.m_fogOfWarLocationComponent->m_fogOfWarPixel != MAX_uint32)
-		{
-			RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, false);
-			components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = true;
-		}
-		else if (components.m_fogOfWarLocationComponent->m_clearedThisFrame)
-		{
-			RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, false);
-			components.m_fogOfWarLocationComponent->m_fogOfWarPixel = MAX_uint32;
-			components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = false;
-		}
-		else
-		{
-			components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = false;
-		}
+			FogOfWarOffsets offsets;
+			PopulateOffsetsForEntity(fogOfWarComponent, components, offsets);
 
-		if (entity.IsAlive())
-		{
-			components.m_fogOfWarLocationComponent->m_fogOfWarPixel = centerPixel;
-		}
+			const uint32 centerPixel = GetPixelNumberFromWorldSpaceLocation(fogOfWarComponent, components.m_transformComponent->m_location);
+			const bool newCenterPixel = centerPixel != components.m_fogOfWarLocationComponent->m_fogOfWarPixel;
+			if (newCenterPixel && components.m_entity.IsAlive() && components.m_fogOfWarLocationComponent->m_fogOfWarPixel != MAX_uint32)
+			{
+				RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, false);
+				components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = true;
+			}
+			else if (components.m_fogOfWarLocationComponent->m_clearedThisFrame)
+			{
+				RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, false);
+				components.m_fogOfWarLocationComponent->m_fogOfWarPixel = MAX_uint32;
+				components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = false;
+			}
+			else
+			{
+				components.m_fogOfWarLocationComponent->m_updatedPixelThisFrame = false;
+			}
+
+			if (components.m_entity.IsAlive())
+			{
+				components.m_fogOfWarLocationComponent->m_fogOfWarPixel = centerPixel;
+			}
+		}));
 	}
+
+	UE::Tasks::Wait(fogOfWarComponent->m_revealEntityTasks);
+	fogOfWarComponent->m_revealEntityTasks.Reset();
 
 	// Calculate new actively revealed pixels.
 	for (uint16 i = ArgusEntity::GetLowestTakenEntityId(); i <= ArgusEntity::GetHighestTakenEntityId(); ++i)
@@ -203,10 +217,21 @@ void FogOfWarSystems::SetRevealedStatePerEntity(FogOfWarComponent* fogOfWarCompo
 			}
 		}
 
-		FogOfWarOffsets offsets;
-		PopulateOffsetsForEntity(fogOfWarComponent, components, offsets);
-		RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, true);
+		fogOfWarComponent->m_revealEntityTasks.Add(UE::Tasks::Launch(ARGUS_NAMEOF(FogOfWarSystems::RevealPixelAlphaForEntity), [&fogOfWarComponent, i]()
+		{
+			FogOfWarSystemsArgs components;
+			if (!components.PopulateArguments(ArgusEntity::RetrieveEntity(i)))
+			{
+				return;
+			}
+
+			FogOfWarOffsets offsets;
+			PopulateOffsetsForEntity(fogOfWarComponent, components, offsets);
+			RevealPixelAlphaForEntity(fogOfWarComponent, components, offsets, true);
+		}));
 	}
+
+	UE::Tasks::Wait(fogOfWarComponent->m_revealEntityTasks);
 }
 
 void FogOfWarSystems::ApplyExponentialDecaySmoothing(FogOfWarComponent* fogOfWarComponent, float deltaTime)
@@ -372,9 +397,9 @@ void FogOfWarSystems::RevealPixelAlphaForEntity(FogOfWarComponent* fogOfWarCompo
 	}
 
 	OctantTraces octantTraces = OctantTraces(ArgusMath::ToCartesianVector2(GetWorldSpaceLocationFromPixelNumber(fogOfWarComponent, components.m_fogOfWarLocationComponent->m_fogOfWarPixel)));
-	RasterizeCircleOfRadius(radius, offsets, [fogOfWarComponent, &components, &obstacleIndicies, &octantTraces, activelyRevealed](const FogOfWarOffsets& offsets)
+	RasterizeCircleOfRadius(fogOfWarComponent, radius, offsets, obstacleIndicies.Num() > 0, [fogOfWarComponent, &components, &obstacleIndicies, &octantTraces, activelyRevealed](const FogOfWarOffsets& offsets)
 	{
-		if (obstacleIndicies.Num() == 0 || ((offsets.m_circleY % 10u) == 0u) || offsets.m_circleX == offsets.m_circleY)
+		if (obstacleIndicies.Num() == 0 || ((offsets.m_circleY % fogOfWarComponent->m_triangleRasterizeModulo) == 0u) || offsets.m_circleX == offsets.m_circleY)
 		{
 			// Set Alpha for pixel range for all symmetrical pixels.
 			SetAlphaForCircleOctant(fogOfWarComponent, components, offsets, obstacleIndicies, octantTraces, activelyRevealed);
@@ -382,13 +407,17 @@ void FogOfWarSystems::RevealPixelAlphaForEntity(FogOfWarComponent* fogOfWarCompo
 	});
 }
 
-void FogOfWarSystems::RasterizeCircleOfRadius(uint32 radius, FogOfWarOffsets& offsets, TFunction<void(FogOfWarOffsets& offsets)> perOctantPixelFunction)
+void FogOfWarSystems::RasterizeCircleOfRadius(FogOfWarComponent* fogOfWarComponent, uint32 radius, FogOfWarOffsets& offsets, bool accountForTriangleRasterization, TFunction<void(FogOfWarOffsets& offsets)> perOctantPixelFunction)
 {
+	ARGUS_RETURN_ON_NULL(fogOfWarComponent, ArgusECSLog);
+
 	// Method of Horn for circle rasterization.
 	int32 circleD = -static_cast<int32>(radius);
 	offsets.m_circleX = radius;
 	offsets.m_circleY = 0u;
-	while (offsets.m_circleX >= offsets.m_circleY)
+
+	uint32 margin = accountForTriangleRasterization ? fogOfWarComponent->m_triangleRasterizeModulo : 0u;
+	while ((offsets.m_circleX + margin) >= offsets.m_circleY)
 	{
 		if (perOctantPixelFunction)
 		{
@@ -552,31 +581,30 @@ void FogOfWarSystems::RevealPixelRangeWithObstacles(FogOfWarComponent* fogOfWarC
 	FVector2D currentFromIntersection = cartesianFromLocation;
 	FVector2D currentToIntersection = cartesianToLocation;
 
-	// TODO JAMES: This section appears to be incorrect. I think I want to make some unit tests for GetLineSegmentIntersectionCartesian to make sure that functions as expected.
-	//for (int32 i = 0; i < obstacleIndicies.Num(); ++i)
-	//{
-	//	const ObstaclePoint& currentObstaclePoint = spatialPartitioningComponent->m_obstacles[obstacleIndicies[i].m_obstacleIndex][obstacleIndicies[i].m_obstaclePointIndex];
-	//	const ObstaclePoint& nextObstaclePoint = spatialPartitioningComponent->m_obstacles[obstacleIndicies[i].m_obstacleIndex].GetNext(obstacleIndicies[i].m_obstaclePointIndex);
+	for (int32 i = 0; i < obstacleIndicies.Num(); ++i)
+	{
+		const ObstaclePoint& currentObstaclePoint = spatialPartitioningComponent->m_obstacles[obstacleIndicies[i].m_obstacleIndex][obstacleIndicies[i].m_obstaclePointIndex];
+		const ObstaclePoint& nextObstaclePoint = spatialPartitioningComponent->m_obstacles[obstacleIndicies[i].m_obstacleIndex].GetNext(obstacleIndicies[i].m_obstaclePointIndex);
 
-	//	FVector2D fromIntersection = cartesianFromLocation;
-	//	FVector2D toIntersection = cartesianToLocation;
+		FVector2D fromIntersection = cartesianFromLocation;
+		FVector2D toIntersection = cartesianToLocation;
 
-	//	if (ArgusMath::GetLineSegmentIntersectionCartesian(cartesianEntityLocation, cartesianFromLocation, currentObstaclePoint.m_point, nextObstaclePoint.m_point, fromIntersection))
-	//	{
-	//		if (FVector2D::DistSquared(cartesianEntityLocation, fromIntersection) < FVector2D::DistSquared(cartesianEntityLocation, currentFromIntersection))
-	//		{
-	//			currentFromIntersection = fromIntersection;
-	//		}
-	//	}
+		if (ArgusMath::GetLineSegmentIntersectionCartesian(cartesianEntityLocation, cartesianFromLocation, currentObstaclePoint.m_point, nextObstaclePoint.m_point, fromIntersection))
+		{
+			if (FVector2D::DistSquared(cartesianEntityLocation, fromIntersection) < FVector2D::DistSquared(cartesianEntityLocation, currentFromIntersection))
+			{
+				currentFromIntersection = fromIntersection;
+			}
+		}
 
-	//	if (ArgusMath::GetLineSegmentIntersectionCartesian(cartesianEntityLocation, cartesianToLocation, currentObstaclePoint.m_point, nextObstaclePoint.m_point, toIntersection))
-	//	{
-	//		if (FVector2D::DistSquared(cartesianEntityLocation, toIntersection) < FVector2D::DistSquared(cartesianEntityLocation, currentToIntersection))
-	//		{
-	//			currentToIntersection = toIntersection;
-	//		}
-	//	}
-	//}
+		if (ArgusMath::GetLineSegmentIntersectionCartesian(cartesianEntityLocation, cartesianToLocation, currentObstaclePoint.m_point, nextObstaclePoint.m_point, toIntersection))
+		{
+			if (FVector2D::DistSquared(cartesianEntityLocation, toIntersection) < FVector2D::DistSquared(cartesianEntityLocation, currentToIntersection))
+			{
+				currentToIntersection = toIntersection;
+			}
+		}
+	}
 
 	if (prevFrom != cartesianEntityLocation)
 	{
