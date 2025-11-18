@@ -6,6 +6,7 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanel.h"
+#include "Slate/SlateBrushAsset.h"
 
 void UMarqueeCanvas::UpdateDisplay(const UpdateDisplayParameters& updateDisplayParams)
 {
@@ -39,6 +40,11 @@ void UMarqueeCanvas::NativeOnInitialized()
 	Super::NativeOnInitialized();
 
 	m_marqueeBoxPoints.SetNumZeroed(5);
+
+	m_marqueeBoxBrushAsset = NewObject<USlateBrushAsset>(this, USlateBrushAsset::StaticClass(), TEXT("MarqueeBoxBrushAsset"));
+	FSlateBrush brush;
+	brush.DrawAs = ESlateBrushDrawType::Box;
+	m_marqueeBoxBrushAsset->Brush = brush;
 }
 
 int32 UMarqueeCanvas::NativePaint(const FPaintArgs& args, const FGeometry& allottedGeometry, const FSlateRect& myCullingRect, FSlateWindowElementList& outDrawElements, int32 layerId, const FWidgetStyle& inWidgetStyle, bool parentEnabled) const
@@ -55,9 +61,10 @@ int32 UMarqueeCanvas::NativePaint(const FPaintArgs& args, const FGeometry& allot
 	{
 		return newLayerId;
 	}
-
+	FVector2D boxSize = m_marqueeBoxPoints[2] - m_marqueeBoxPoints[0];
 	FPaintContext context = FPaintContext(allottedGeometry, myCullingRect, outDrawElements, layerId, inWidgetStyle, parentEnabled);
+	UWidgetBlueprintLibrary::DrawBox(context, m_marqueeBoxPoints[0], boxSize, m_marqueeBoxBrushAsset, m_marqueeBoxFillColor);
 	UWidgetBlueprintLibrary::DrawLines(context, m_marqueeBoxPoints, m_marqueeBoxColor, false, m_marqueeBoxThickness);
-
+	
 	return FMath::Max(newLayerId, context.MaxLayer);
 }
