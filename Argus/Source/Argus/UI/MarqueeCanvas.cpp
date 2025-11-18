@@ -61,9 +61,11 @@ int32 UMarqueeCanvas::NativePaint(const FPaintArgs& args, const FGeometry& allot
 	{
 		return newLayerId;
 	}
-	FVector2D boxSize = m_marqueeBoxPoints[2] - m_marqueeBoxPoints[0];
+	const FVector2D topLeft = FVector2D::Min(m_marqueeBoxPoints[0], m_marqueeBoxPoints[2]);
+	const FVector2D bottomRight = FVector2D::Max(m_marqueeBoxPoints[0], m_marqueeBoxPoints[2]);
+
 	FPaintContext context = FPaintContext(allottedGeometry, myCullingRect, outDrawElements, layerId, inWidgetStyle, parentEnabled);
-	UWidgetBlueprintLibrary::DrawBox(context, m_marqueeBoxPoints[0], boxSize, m_marqueeBoxBrushAsset, m_marqueeBoxFillColor);
+	UWidgetBlueprintLibrary::DrawBox(context, topLeft, bottomRight - topLeft, m_marqueeBoxBrushAsset, m_marqueeBoxFillColor);
 	UWidgetBlueprintLibrary::DrawLines(context, m_marqueeBoxPoints, m_marqueeBoxColor, false, m_marqueeBoxThickness);
 	
 	return FMath::Max(newLayerId, context.MaxLayer);
