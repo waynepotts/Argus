@@ -42,13 +42,17 @@ TArray<AArgusActor*> IArgusController::GetArgusActorsWithTeamRelationship(const 
 	return allActors.FilterByPredicate([relationships, team](AArgusActor* actor) { return relationships.Contains(actor->GetEntity().GetTeamRelationship(team)); });
 }
 
-AArgusActor* IArgusController::GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
+AArgusActor* IArgusController::GetNearestTeamActorOfClass(const TSubclassOf<AArgusActor> actorClass, const TArray<AArgusActor*> ignoreActors, FVector location)
 {
 	TArray<AArgusActor*> allActors = GetAllTeamActors();
 	AArgusActor* nearestActor = nullptr;
 	double distance = 999999999.0f;
 	for (AArgusActor* actor : allActors)
 	{
+		if (ignoreActors.Contains(actor))
+		{
+			continue;
+		}
 		if (actor->IsA(actorClass))
 		{
 			if (nearestActor)

@@ -94,6 +94,17 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	void StartNextQueuedTask();
+	/**
+	* Used to queue a move to location for the actor, the default is that there is a max of 10 tasks for the queue
+	*/
+	UFUNCTION(BlueprintCallable)
+	void QyeueMoveToLocation(FVector targetLocation);
+
+	/**
+	* Used to queue interactions with other actors. If the target actor dies before the interaction, the interaction will be igored.
+	*/
+	UFUNCTION(BlueprintCallable)
+	void QyeueInteractWithActor(AArgusActor* targetActor);
 protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnSelected();
@@ -124,18 +135,6 @@ protected:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void OnArgusEntityAbility(int32 abilityId);
-
-	/**
-	* Used to queue a move to location for the actor, the default is that there is a max of 10 tasks for the queue
-	*/
-	UFUNCTION(BlueprintCallable)
-	void QyeueMoveToLocation(FVector targetLocation);
-
-	/**
-	* Used to queue interactions with other actors. If the target actor dies before the interaction, the interaction will be igored.
-	*/
-	UFUNCTION(BlueprintCallable)
-	void QyeueInteractWithActor(AArgusActor* targetActor);
 
 	/**
 	* Returns all of the argus actors within this actors sight range. 

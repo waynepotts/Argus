@@ -14,7 +14,7 @@ UMemoryComponent::UMemoryComponent()
 {
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
-	PrimaryComponentTick.bCanEverTick = true;
+	PrimaryComponentTick.bCanEverTick = false;
 	// ...
 }
 
@@ -197,23 +197,23 @@ FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, con
 	{
 		return FVector();
 	}
+	const FVector keyLoc = CreateHeatMapKey(location);
 	double time = world->GetTimeSeconds() - 60.0;
-	int32 xMax = int32(location.X) / 100 * 100 + range;
-	int32 yMax = int32(location.Y) / 100 * 100 + range;
-	int32 xMin = xMax - range * 2;
-	int32 yMin = yMax - range * 2;
+	int32 xMax = int32(keyLoc.X) + range;
+	int32 yMax = int32(keyLoc.Y) + range;
+	int32 xMin = int32(keyLoc.X) - range;
+	int32 yMin = int32(keyLoc.Y) - range;
 	TSet<FVector> locationsToCheck;
 	for (int32 x = xMin; x <= xMax; x += 200)
 	{
 		for (int32 y = yMin; y <= yMax; y += 200)
 		{
-			FVector loc = FVector(x, y, 0.0f);
-			locationsToCheck.Add(loc);
+			locationsToCheck.Add(CreateHeatMapKey(FVector(x, y, 0.0f)));
 		}
 	}
-	locationsToCheck.Remove(CreateHeatMapKey(location));
+	locationsToCheck.Remove(CreateHeatMapKey(keyLoc));
 	FVector foundLocation = *locationsToCheck.FindArbitraryElement();
-	for (FVector loc : locationsToCheck.Array())
+	for (const FVector& loc : locationsToCheck)
 	{
 		if (!m_heatMap.Contains(loc))
 		{

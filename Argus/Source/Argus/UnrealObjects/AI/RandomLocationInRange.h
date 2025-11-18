@@ -9,7 +9,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(DisplayName= "ST Task: Random Location In Range", Category = "Argus AI")
 class ARGUS_API URandomLocationInRange : public UArgus_STTask_Base
 {
 	GENERATED_BODY()

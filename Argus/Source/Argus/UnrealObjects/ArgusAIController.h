@@ -17,7 +17,7 @@ class ArgusEntity;
  * 
  */
 UCLASS(BlueprintType)
-class ARGUS_API AArgusAIController : public AAIController, public IArgusController, public IHasMemory
+class ARGUS_API AArgusAIController : public AAIController, public IArgusController
 {
 	GENERATED_BODY()
 	
@@ -52,55 +52,16 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	TArray<AArgusActor*> GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships) override;
 
-	/**
-	* Returns the nearest idle actor of the specified class this controller can give commands to.
-	* 
-	* The idea behind this function is so that we've got a quick way for the AI to get an available unit to give instructions to.
-	* 
-	* return null if there is no available actor of the specified class.
-	* 
-	* @param actorClass The class of the actor to find.
-	* @param location The location to search from.
-	*/
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	AArgusActor* GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location = FVector::ZeroVector) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	void UpdateMemory() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	void RemoveExpiredMemories(const float currentTime) override;
-
-	FVector GetNearestLocationToSearch(const FVector location, const double range) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	bool HasAnyMemories() override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	bool SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	void AddMemory(AArgusActor* actor, const FLocationMemory& memory) override;
-
-	void AddEnemySeen(const FVector location, const double currentTime) override;
-
-	void AddResourcesSeen(const FVector location, const double currentTime) override;
-	void AddVisitedLocation(const FVector location, const double currentTime) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	void RemoveMemory(AArgusActor* actor) override;
-
-	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
-	bool GetMemory(AArgusActor* actor, FLocationMemory& memory) override;
+	AArgusActor* GetNearestTeamActorOfClass(const TSubclassOf<AArgusActor> actorClass, const TArray<AArgusActor*> ignoreActors, FVector location = FVector::ZeroVector);
+	
 
 protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
-	ETeam m_playerTeam = ETeam::TeamA;
+	ETeam m_playerTeam = ETeam::TeamH;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
 	TArray<TSubclassOf<AArgusActor>> m_requiredClasses;
 
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
-	UMemoryComponent* m_memoryComponent;
 };

@@ -12,7 +12,7 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(DisplayName = "ST Task: Check Required Entities", Category = "Argus AI")
 class ARGUS_API UCheckRequiredEntities : public UArgus_STTask_Base
 {
 	GENERATED_BODY()

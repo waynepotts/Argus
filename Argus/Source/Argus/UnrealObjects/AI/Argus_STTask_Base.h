@@ -4,20 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/StateTreeTaskBlueprintBase.h"
-#include "ArgusAIController.h"
+#include "ArgusAIController_RTS.h"
 #include "Argus_STTask_Base.generated.h"
 
 /**
  * 
  */
-UCLASS()
+UCLASS(DisplayName = "ST Task: Base", Category = "Argus AI")
 class ARGUS_API UArgus_STTask_Base : public UStateTreeTaskBlueprintBase
 {
 	GENERATED_BODY()
 	
 public:
 	UPROPERTY(BLueprintReadWrite, EditAnywhere)
-	AArgusAIController* m_aiController;
+	AArgusAIController_RTS* m_aiController;
 
 	EStateTreeRunStatus EnterState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) override;
 	void ExitState(FStateTreeExecutionContext& Context, const FStateTreeTransitionResult& Transition) override;

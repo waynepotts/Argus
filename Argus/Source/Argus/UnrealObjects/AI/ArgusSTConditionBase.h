@@ -18,4 +18,5 @@ class ARGUS_API UArgusSTConditionBase : public UStateTreeConditionBlueprintBase
 public:
 	UPROPERTY(BLueprintReadWrite, EditAnywhere)
 	AArgusAIController* m_aiController;
+
 };

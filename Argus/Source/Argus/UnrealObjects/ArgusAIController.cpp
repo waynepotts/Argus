@@ -13,8 +13,6 @@
 
 AArgusAIController::AArgusAIController()
 {
-	UMemoryComponent* memory = CreateDefaultSubobject<UMemoryComponent>(TEXT("MemoryComponent"));
-	m_memoryComponent = memory;
 }
 
 void AArgusAIController::UpdateHiddenActors()
@@ -179,63 +177,10 @@ TArray<AArgusActor*> AArgusAIController::GetArgusActorsWithTeamRelationship(cons
 	return IArgusController::GetArgusActorsWithTeamRelationship(relationships);
 }
 
-AArgusActor* AArgusAIController::GetNearestTeamActorOfClass(TSubclassOf<AArgusActor> actorClass, FVector location)
+AArgusActor* AArgusAIController::GetNearestTeamActorOfClass(const TSubclassOf<AArgusActor> actorClass, const TArray<AArgusActor*> ignoreActors, FVector location)
 {
 	// just call the parent, this is just to expose to blueprint
-	return IArgusController::GetNearestTeamActorOfClass(actorClass, location);
+	return IArgusController::GetNearestTeamActorOfClass(actorClass, ignoreActors, location);
 }
 
-void AArgusAIController::UpdateMemory()
-{
-	m_memoryComponent->UpdateMemory();
-}
 
-bool AArgusAIController::HasAnyMemories()
-{
-	return m_memoryComponent->HasAnyMemories();
-}
-
-bool AArgusAIController::SeenActorOfClass(TSubclassOf<AActor> actorClass, FVector& location)
-{
-	return m_memoryComponent->SeenActorOfClass(actorClass, location);
-}
-
-void AArgusAIController::AddMemory(AArgusActor* actor, const FLocationMemory& memory)
-{
-	m_memoryComponent->AddMemory(actor, memory);
-}
-
-void AArgusAIController::AddEnemySeen(const FVector location, const double currentTime)
-{
-	m_memoryComponent->AddEnemySeen(location, currentTime);
-}
-
-void AArgusAIController::AddResourcesSeen(const FVector location, const double currentTime)
-{
-	m_memoryComponent->AddResourcesSeen(location, currentTime);
-}
-
-void AArgusAIController::AddVisitedLocation(const FVector location, const double currentTime)
-{
-	m_memoryComponent->AddVisitedLocation(location, currentTime);
-}
-
-void AArgusAIController::RemoveMemory(AArgusActor* actor)
-{
-	m_memoryComponent->RemoveMemory(actor);
-}
-
-bool AArgusAIController::GetMemory(AArgusActor* actor, FLocationMemory& memory)
-{
-	return m_memoryComponent->GetMemory(actor, memory);
-}
-
-void AArgusAIController::RemoveExpiredMemories(const float currentTime)
-{
-	//m_memoryComponent->RemoveExpiredMemories(currentTime);
-}
-
-FVector AArgusAIController::GetNearestLocationToSearch(const FVector location, const double range)
-{
-	return FVector(); // m_memoryComponent->GetNearestLocationToSearch(location, range);
-}

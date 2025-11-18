@@ -7,34 +7,32 @@
 void URandomLocationInRange::OnArgusStartTask()
 {
 	bool bSuccess = false;
-	AArgusActor* actor = nullptr;
-	for (TSubclassOf<AArgusActor> actorClass : m_actorClasses)
+	TArray<AArgusActor*> actors = m_aiController->GetAllTeamActors();
+	UWorld* world = GetWorld();
+	if (!world)
 	{
-		AArgusActor* nearest = m_aiController->GetNearestTeamActorOfClass(actorClass);
-		if (nearest)
-		{
-			actor = nearest;
-			break;
-		}
+		FinishTask(false);
+		return;
 	}
-	if (actor)
+	UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(world);
+	if (!navSystem)
 	{
-		UWorld* world = GetWorld();
-		if (world)
+		FinishTask(false);
+		return;
+	}
+	for (AArgusActor* actor : actors)
+	{
+		if(m_actorClasses.Contains(actor->GetClass()) && actor->IsIdle())
 		{
 			FVector location = m_aiController->GetNearestLocationToSearch(actor->GetActorLocation(), m_range);
-			UNavigationSystemV1* navSystem = FNavigationSystem::GetCurrent<UNavigationSystemV1>(world);
-			if (navSystem)
+			FNavLocation navLocation;
+			if (navSystem->GetRandomReachablePointInRadius(location, m_range, navLocation))
 			{
-				FNavLocation navLocation;
-				if (navSystem->GetRandomReachablePointInRadius(location, m_range, navLocation))
-				{
-					actor->SetMoveToLocation(navLocation.Location, true);
-					bSuccess = true;
-				}
+				//actor->SetMoveToLocation(navLocation.Location, true);
+				actor->QyeueMoveToLocation(navLocation.Location);
 			}
 		}
 	}
-	FinishTask(bSuccess);
+	FinishTask(true);
 
 }
