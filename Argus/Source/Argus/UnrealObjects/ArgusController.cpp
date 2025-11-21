@@ -78,3 +78,12 @@ float IArgusController::GetTeamThreatLevel(ETeam team)
 {
 	return 1.0f;
 }
+
+float IArgusController::GetThreatLevel()
+{
+	return 0.0f;
+}
+
+void IArgusController::UpdateThreatLevels()
+{
+}

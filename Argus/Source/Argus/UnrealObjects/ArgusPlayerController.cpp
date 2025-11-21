@@ -36,7 +36,6 @@ void AArgusPlayerController::ProcessArgusPlayerInput(float deltaTime)
 	{
 		return;
 	}
-
 	m_reticleActor->UpdateReticle();
 }
 

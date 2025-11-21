@@ -24,11 +24,15 @@ struct ReticleComponent
 	ARGUS_IGNORE()
 	bool m_wasAbilityCast = false;
 
+	TSet<uint16> m_abilityEntityIds;
+
 	void DisableReticle() 
 	{ 
 		m_abilityRecordId = 0u;
 		m_wasAbilityCast = false;
+		m_abilityEntityIds.Empty();
 	}
 
-	bool IsReticleEnabled() const { return m_abilityRecordId != 0u; }
+	//bool IsReticleEnabled() const { return m_abilityRecordId != 0u; }
+	bool IsReticleEnabled() const { return m_abilityEntityIds.Num() != 0; }
 };

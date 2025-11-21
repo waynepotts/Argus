@@ -213,23 +213,28 @@ FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, con
 	}
 	locationsToCheck.Remove(CreateHeatMapKey(keyLoc));
 	FVector foundLocation = *locationsToCheck.FindArbitraryElement();
-	for (const FVector& loc : locationsToCheck)
+	while (locationsToCheck.Num() > 0)
 	{
-		if (!m_heatMap.Contains(loc))
-		{
-			if (FVector::Dist(loc, location) < FVector::Dist(foundLocation, location))
+
+
+		FVector testLocation = *locationsToCheck.FindArbitraryElement();
+		if (!m_heatMap.Contains(testLocation))
 			{
-				foundLocation = loc;
+				if (FVector::Dist(testLocation, location) < FVector::Dist(foundLocation, location))
+				{
+					foundLocation = testLocation;
+				}
 			}
-		}
 		else
 		{
-			if (FVector::Dist(loc, location) < FVector::Dist(foundLocation, location) && m_heatMap[loc].Z < time)
+			if (FVector::Dist(testLocation, location) < FVector::Dist(foundLocation, location) && m_heatMap[testLocation].Z < time)
 			{
-				foundLocation = loc;
-				time = m_heatMap[loc].Z;
+				foundLocation = testLocation;
+				time = m_heatMap[testLocation].Z;
 			}
 		}
+		locationsToCheck.Remove(testLocation);
+		
 	}
 	return foundLocation;
 }

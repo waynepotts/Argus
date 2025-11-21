@@ -183,4 +183,8 @@ AArgusActor* AArgusAIController::GetNearestTeamActorOfClass(const TSubclassOf<AA
 	return IArgusController::GetNearestTeamActorOfClass(actorClass, ignoreActors, location);
 }
 
+void AArgusAIController::UpdateThreatLevels()
+{
+}
+
 

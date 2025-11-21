@@ -55,7 +55,22 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
 	AArgusActor* GetNearestTeamActorOfClass(const TSubclassOf<AArgusActor> actorClass, const TArray<AArgusActor*> ignoreActors, FVector location = FVector::ZeroVector);
 	
+	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
+	virtual void UpdateThreatLevels() override;
 
+	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
+	float GetTeamThreatLevel(ETeam team) override { return m_teamThreatLevels.Contains(team) ? m_teamThreatLevels[team] : 0.0f; }
+
+	UFUNCTION(BlueprintCallable, Category = "Argus AIController")
+	float GetThreatLevel() override 
+	{ 
+		float threatLevel = 0.0f;
+		for (auto teamThreatLevel : m_teamThreatLevels)
+		{
+			threatLevel += teamThreatLevel.Value;
+		}
+		return threatLevel / m_teamThreatLevels.Num();
+	}
 protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
@@ -63,5 +78,8 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
 	TArray<TSubclassOf<AArgusActor>> m_requiredClasses;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
+	TMap<ETeam, float> m_teamThreatLevels;
 
 };

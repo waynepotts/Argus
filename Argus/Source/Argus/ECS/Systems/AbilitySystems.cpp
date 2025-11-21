@@ -75,6 +75,8 @@ void AbilitySystems::CastAbility(const UAbilityRecord* abilityRecord, const Abil
 		components.m_reticleComponent->m_wasAbilityCast = true;
 	}
 
+	components.m_reticleComponent->m_abilityEntityIds.Remove(components.m_entity.GetId());
+
 	bool successfulyCast = false;
 	for (int32 i = 0; i < abilityRecord->m_abilityEffects.Num(); ++i)
 	{

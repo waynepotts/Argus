@@ -28,7 +28,16 @@ struct QueuedTask
 	{
 		m_movementState = EMovementState::ProcessMoveToLocationCommand;
 	}
+
+	QueuedTask(EAbilityState abilityState) : m_abilityState(abilityState)
+	{
+		m_movementState = EMovementState::None;
+		m_constructionState = EConstructionState::None;
+		m_combatState = ECombatState::None;
+		m_resourceExtractionState = EResourceExtractionState::None;
+	}
 };
+
 struct TaskComponent
 {
 	ARGUS_COMPONENT_SHARED;

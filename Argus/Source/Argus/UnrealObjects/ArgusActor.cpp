@@ -190,7 +190,7 @@ TArray<FVector> AArgusActor::GetCurrentWaypoints() const
 			const UWorld* world = GetWorld();
 			if (!world)
 			{
-				return waypoints;
+				return TArray<FVector>();
 			}
 			for (const FVector& waypoint : navComponent->m_queuedWaypoints)
 			{
@@ -351,6 +351,10 @@ inline void AArgusActor::StartNextQueuedTask()
 				targetingComponent->m_targetEntityId = ArgusEntity::k_emptyEntity.GetId();
 				targetingComponent->m_targetLocation = queuedTask.m_targetLocation;
 				taskComponent->m_movementState = queuedTask.m_movementState;
+			}
+			else if (queuedTask.m_abilityState != EAbilityState::None)
+			{
+				taskComponent->m_abilityState = queuedTask.m_abilityState;
 			}
 		}
 	}
@@ -613,6 +617,12 @@ ETeam AArgusActor::GetTeam() const
 
 void AArgusActor::OnArgusEntityAbilityAtLocation_Implementation(int32 abilityId, FVector location)
 {
+	SetMoveToLocation(location, true);
+	QueueCastAbility(abilityId);
+
+}
+void AArgusActor::OnArgusEntityAbility_Implementation(int32 abilityId)
+{
 	if (abilityId < 0 || abilityId > 3)
 	{
 		return;
@@ -622,35 +632,30 @@ void AArgusActor::OnArgusEntityAbilityAtLocation_Implementation(int32 abilityId,
 	{
 		return;
 	}
-
-	switch (abilityId)
+	if (taskComponent->m_abilityState == EAbilityState::None)
 	{
-	case 0u:
-		taskComponent->m_abilityState = EAbilityState::ProcessCastAbility0Command;
-		break;
-	case 1u:
-		taskComponent->m_abilityState = EAbilityState::ProcessCastAbility1Command;
-		break;
-	case 2u:
-		taskComponent->m_abilityState = EAbilityState::ProcessCastAbility2Command;
-		break;
-	case 3u:
-		taskComponent->m_abilityState = EAbilityState::ProcessCastAbility3Command;
-		break;
-	default:
-		break;
+		switch (abilityId)
+		{
+		case 0u:
+			taskComponent->m_abilityState = EAbilityState::ProcessCastAbility0Command;
+			break;
+		case 1u:
+			taskComponent->m_abilityState = EAbilityState::ProcessCastAbility1Command;
+			break;
+		case 2u:
+			taskComponent->m_abilityState = EAbilityState::ProcessCastAbility2Command;
+			break;
+		case 3u:
+			taskComponent->m_abilityState = EAbilityState::ProcessCastAbility3Command;
+			break;
+		default:
+			break;
+		}
 	}
-
-
-}
-void AArgusActor::OnArgusEntityAbility_Implementation(int32 abilityId)
-{
-	OnArgusEntityAbilityAtLocation(abilityId, GetActorLocation());
 }
 
-void AArgusActor::QyeueMoveToLocation(FVector targetLocation)
+void AArgusActor::QueueMoveToLocation(FVector targetLocation)
 {
-	TargetingComponent* targetingComponent = m_entity.GetComponent<TargetingComponent>();
 	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
 	{
 		if (taskComponent->m_queuedCommands.Num() < taskComponent->m_queuedCommands.Max())
@@ -661,7 +666,7 @@ void AArgusActor::QyeueMoveToLocation(FVector targetLocation)
 	}
 }
 
-void AArgusActor::QyeueInteractWithActor(AArgusActor* targetActor)
+void AArgusActor::QueueInteractWithActor(AArgusActor* targetActor)
 {
 	TargetingComponent* targetingComponent = m_entity.GetComponent<TargetingComponent>();
 	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
@@ -670,6 +675,39 @@ void AArgusActor::QyeueInteractWithActor(AArgusActor* targetActor)
 		{
 			QueuedTask moveToLocationCommand(targetActor->GetEntity().GetId());
 			taskComponent->m_queuedCommands.PushLast(moveToLocationCommand);
+		}
+	}
+}
+
+void AArgusActor::QueueCastAbility(int32 abilityId)
+{
+	if (abilityId < 0 || abilityId > 3)
+	{
+		return;
+	}
+	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())
+	{
+		if (taskComponent->m_queuedCommands.Num() < taskComponent->m_queuedCommands.Max())
+		{
+
+			switch (abilityId)
+			{
+			case 0u:
+				taskComponent->m_queuedCommands.PushLast(QueuedTask(EAbilityState::ProcessCastAbility0Command));
+				break;
+			case 1u:
+				taskComponent->m_queuedCommands.PushLast(QueuedTask(EAbilityState::ProcessCastAbility1Command));
+				break;
+			case 2u:
+				taskComponent->m_queuedCommands.PushLast(QueuedTask(EAbilityState::ProcessCastAbility2Command));
+				break;
+			case 3u:
+				taskComponent->m_queuedCommands.PushLast(QueuedTask(EAbilityState::ProcessCastAbility3Command));
+				break;
+			default:
+				break;
+			}
+			
 		}
 	}
 }

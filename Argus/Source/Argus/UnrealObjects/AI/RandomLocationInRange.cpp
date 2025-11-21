@@ -22,14 +22,15 @@ void URandomLocationInRange::OnArgusStartTask()
 	}
 	for (AArgusActor* actor : actors)
 	{
-		if(m_actorClasses.Contains(actor->GetClass()) && actor->IsIdle())
+		bool bIncludeAll = m_bOnlyIdleActors ? actor->IsIdle() : true;
+		if(m_actorClasses.Contains(actor->GetClass()) && bIncludeAll)
 		{
 			FVector location = m_aiController->GetNearestLocationToSearch(actor->GetActorLocation(), m_range);
 			FNavLocation navLocation;
 			if (navSystem->GetRandomReachablePointInRadius(location, m_range, navLocation))
 			{
 				//actor->SetMoveToLocation(navLocation.Location, true);
-				actor->QyeueMoveToLocation(navLocation.Location);
+				actor->QueueMoveToLocation(navLocation.Location);
 			}
 		}
 	}

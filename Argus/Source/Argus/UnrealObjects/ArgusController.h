@@ -42,5 +42,19 @@ public:
 
 	virtual AArgusActor* GetNearestTeamActorOfClass(const TSubclassOf<AArgusActor> actorClass, const TArray<AArgusActor*> ignoreActors, FVector location = FVector::ZeroVector);
 
+	/**
+	* Returns the threat level of a team, enemy teams will be minimum of 0.1, friendly or inactive teams will be 0.0f.
+	* threat levels for enemy teams are a minimum of 0.1 (low threat), 1.0 (equal threat), or over 1.0 (high threat)
+	*/
 	virtual float GetTeamThreatLevel(ETeam team);
+
+	/** 
+	* Returns the mean threat level of all enemy teams
+	*/
+	virtual float GetThreatLevel();
+
+	/**
+	* As the threat levels probably won't change very quickly, this function can be called to update the threat levels
+	*/
+	virtual void UpdateThreatLevels();
 };

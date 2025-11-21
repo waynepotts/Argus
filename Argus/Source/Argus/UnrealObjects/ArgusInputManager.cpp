@@ -1123,8 +1123,9 @@ void UArgusInputManager::ProcessAbilityInputEvent(uint8 abilityIndex)
 			abilityIndex
 		);
 	}
-
-	const InputInterfaceComponent* inputInterfaceComponent = ArgusEntity::GetSingletonEntity().GetComponent<InputInterfaceComponent>();
+	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
+	ReticleComponent* reticleComponent = singletonEntity.GetComponent<ReticleComponent>();
+	const InputInterfaceComponent* inputInterfaceComponent = singletonEntity.GetComponent<InputInterfaceComponent>();
 	if (!inputInterfaceComponent)
 	{
 		return;
@@ -1137,7 +1138,9 @@ void UArgusInputManager::ProcessAbilityInputEvent(uint8 abilityIndex)
 			continue;
 		}
 
-		ProcessAbilityInputEventPerSelectedEntity(ArgusEntity::RetrieveEntity(inputInterfaceComponent->m_activeAbilityGroupArgusEntityIds[i]), abilityIndex);
+		ArgusEntity entity = ArgusEntity::RetrieveEntity(inputInterfaceComponent->m_activeAbilityGroupArgusEntityIds[i]);
+		reticleComponent->m_abilityEntityIds.Add(entity.GetId());
+		ProcessAbilityInputEventPerSelectedEntity(entity, abilityIndex);
 	}
 }
 

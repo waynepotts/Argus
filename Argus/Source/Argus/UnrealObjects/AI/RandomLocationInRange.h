@@ -22,4 +22,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TArray<TSubclassOf<AArgusActor>> m_actorClasses;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	bool m_bOnlyIdleActors = false;
 };

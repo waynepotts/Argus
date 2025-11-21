@@ -48,6 +48,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "ArgusAIControllerRTS")
 	bool GetMemory(AArgusActor* actor, FLocationMemory& memory) override;
 
+	void UpdateThreatLevels() override;
+
 protected:
 	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ArgusAIControllerRTS")
 	//TArray<TSubclassOf<AArgusActor>> m_requiredClasses;
