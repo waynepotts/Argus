@@ -96,3 +96,8 @@ void AArgusAIController_RTS::UpdateThreatLevels()
 		m_teamThreatLevels.Add(entry.Key, FMath::Max(0.1f, entry.Value / myThreat));
 	}
 }
+
+TArray<FVector> AArgusAIController_RTS::GetNearestSafeLocations(const FVector location, const double threatLevel, const float range)
+{
+	return m_memoryComponent->GetNearestSafeLocations(location, threatLevel, range);
+}

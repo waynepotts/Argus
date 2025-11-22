@@ -34,6 +34,7 @@ public:
 	static ArgusEntity		GetSingletonEntity() { return RetrieveEntity(ArgusECSConstants::k_singletonEntityId); }
 	static uint16			GetTeamEntityId(ETeam team);
 	static ArgusEntity		GetTeamEntity(ETeam team);
+	
 
 	static const ArgusEntity k_emptyEntity;
 
@@ -66,6 +67,7 @@ public:
 	void ClearUnderAttackStatus() const;
 	bool HasExtractableResources() const;
 	bool IsOnEnemyTeam(ETeam team) const;
+	bool IsValidBuildLocation(FVector location);
 
 	ETeamRelationship GetTeamRelationship(const ETeam team) const;
 

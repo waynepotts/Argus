@@ -46,3 +46,9 @@ bool IHasMemory::GetMemory(AArgusActor* actor, FLocationMemory& memory)
 {
 	return false;
 }
+
+TArray<FVector> IHasMemory::GetNearestSafeLocations(const FVector location, const double thratLevel, const float range)
+{
+	return TArray<FVector>();
+}
+

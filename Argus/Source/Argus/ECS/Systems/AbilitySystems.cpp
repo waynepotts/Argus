@@ -276,23 +276,35 @@ bool AbilitySystems::CastSpawnAbility(const UAbilityRecord* abilityRecord, const
 		return false;
 	}
 
-	if (components.m_taskComponent->m_spawningState == ESpawningState::None)
-	{
-		components.m_taskComponent->m_spawningState = ESpawningState::ProcessQueuedSpawnEntity;
-	}
-
 	SpawnEntityInfo spawnInfo;
 	spawnInfo.m_argusActorRecordId = abilityEffect.m_argusActorRecordId;
 	spawnInfo.m_spawningAbilityRecordId = abilityRecord->m_id;
 	spawnInfo.m_timeToCastSeconds = abilityRecord->m_timeToCastSeconds;
 	spawnInfo.m_needsConstruction = needsConstruction;
+	/* 
+	TODO: should refactor, if we set the spawn location here we should be able to simplify the SpawningSystems class
+	so it won't need to check an option each time.
+	*/
+	FVector spawnLocation = components.m_transformComponent->m_location;
+
 	if (atReticle)
 	{
 		spawnInfo.m_spawnLocationOverride = components.m_reticleComponent->m_reticleLocation;
+		spawnLocation = components.m_reticleComponent->m_reticleLocation;
 	}
-	spawningComponent->m_spawnQueue.PushLast(spawnInfo);
+	ArgusEntity entity = components.m_entity;
+	bool bValidLocation = entity.IsValidBuildLocation(spawnLocation);
+	
 
-	return true;
+	if (bValidLocation)
+	{
+		if (components.m_taskComponent->m_spawningState == ESpawningState::None)
+		{
+			components.m_taskComponent->m_spawningState = ESpawningState::ProcessQueuedSpawnEntity;
+		}
+		spawningComponent->m_spawnQueue.PushLast(spawnInfo);
+	}
+	return bValidLocation;
 }
 
 bool AbilitySystems::CastHealAbility(const UAbilityRecord* abilityRecord, const FAbilityEffect& abilityEffect, const AbilitySystemsArgs& components)

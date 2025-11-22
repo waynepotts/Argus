@@ -239,6 +239,21 @@ FVector UMemoryComponent::GetNearestLocationToSearch(const FVector location, con
 	return foundLocation;
 }
 
+TArray<FVector> UMemoryComponent::GetNearestSafeLocations(const FVector location, const double threatLevel, const float range)
+{
+	TArray<FVector> foundLocations;
+	for (const auto& [loc, loc4] : m_heatMap)
+	{
+		float dist = FVector::Dist(loc, location);
+		if (loc4.X <= threatLevel && dist < range)
+		{
+			foundLocations.Add(loc);
+		}
+	}
+	foundLocations.Sort([location](const FVector& A, const FVector& B) { return FVector::DistSquared(A, location) < FVector::DistSquared(B, location); });
+	return foundLocations;
+}
+
 void UMemoryComponent::RemoveMemory(AArgusActor* actor)
 {
 	m_memoryMap.Remove(actor);

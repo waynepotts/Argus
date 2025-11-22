@@ -137,7 +137,10 @@ protected:
 	void OnArgusEntityAbilityAtLocation(int32 abilityId, FVector location);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
-	void OnArgusEntityAbility(int32 abilityId);
+	void CastArgusEntityAbility(int32 abilityId);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	bool IsValidBuildLocation(FVector location);
 
 	/**
 	* Returns all of the argus actors within this actors sight range. 

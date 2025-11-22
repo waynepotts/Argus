@@ -24,6 +24,7 @@ struct ReticleComponent
 	ARGUS_IGNORE()
 	bool m_wasAbilityCast = false;
 
+	ARGUS_IGNORE()
 	TSet<uint16> m_abilityEntityIds;
 
 	void DisableReticle() 

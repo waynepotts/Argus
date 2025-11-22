@@ -172,6 +172,33 @@ ArgusEntity ArgusEntity::GetTeamEntity(ETeam team)
 	return RetrieveEntity(GetTeamEntityId(team));
 }
 
+bool ArgusEntity::IsValidBuildLocation(FVector location)
+{
+	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
+	SpatialPartitioningComponent* spatialPartitioningComponent = singletonEntity.GetComponent<SpatialPartitioningComponent>();
+	ARGUS_RETURN_ON_NULL_BOOL(spatialPartitioningComponent, ArgusECSLog);
+	SpawningComponent* spawningComponent = GetComponent<SpawningComponent>();
+	ARGUS_RETURN_ON_NULL_BOOL(spawningComponent, ArgusECSLog);
+	TaskComponent* taskComponent = GetComponent<TaskComponent>();
+	ARGUS_RETURN_ON_NULL_BOOL(taskComponent, ArgusECSLog);
+	TArray<uint16> nearbyArgusEntityIds;
+	const float querySize = spawningComponent->m_spawningRadius;
+	spatialPartitioningComponent->m_argusEntityKDTree.FindArgusEntityIdsWithinRangeOfLocation(nearbyArgusEntityIds, location, querySize);
+	nearbyArgusEntityIds.Remove(m_id);
+	bool anyFound = nearbyArgusEntityIds.Num() > 0;
+
+	if (!anyFound)
+	{
+		TArray<ObstacleIndicies> obstacleIndicies;
+		FVector loc = ArgusMath::ToCartesianVector(location);
+		loc.Z = 0.0f;
+		spatialPartitioningComponent->m_obstaclePointKDTree.FindObstacleIndiciesWithinRangeOfLocation(obstacleIndicies, loc, querySize);
+		anyFound = obstacleIndicies.Num() > 0;
+	}
+
+	return !anyFound;
+}
+
 ArgusEntity::ArgusEntity(const ArgusEntity& other)
 {
 	m_id = other.GetId();

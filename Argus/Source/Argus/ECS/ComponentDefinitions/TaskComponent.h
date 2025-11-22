@@ -31,10 +31,6 @@ struct QueuedTask
 
 	QueuedTask(EAbilityState abilityState) : m_abilityState(abilityState)
 	{
-		m_movementState = EMovementState::None;
-		m_constructionState = EConstructionState::None;
-		m_combatState = ECombatState::None;
-		m_resourceExtractionState = EResourceExtractionState::None;
 	}
 };
 
@@ -73,6 +69,15 @@ struct TaskComponent
 	bool IsExecutingMoveTask() const
 	{
 		return m_movementState == EMovementState::MoveToLocation || m_movementState == EMovementState::MoveToEntity;
+	}
+
+	void StartQueuedTask(QueuedTask queuedTask)
+	{
+		m_movementState = queuedTask.m_movementState;
+		m_abilityState = queuedTask.m_abilityState;
+		m_constructionState = queuedTask.m_constructionState;
+		m_combatState = queuedTask.m_combatState;
+		m_resourceExtractionState = queuedTask.m_resourceExtractionState;
 	}
 
 	void SetToKillState()

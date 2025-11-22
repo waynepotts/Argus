@@ -67,6 +67,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	FVector GetNearestLocationToSearch(FVector location, const double range);
 
+	UFUNCTION(BlueprintCallable)
+	TArray<FVector> GetNearestSafeLocations(const FVector location, const double threatLevel, const float range) override;
+
 	FVector CreateHeatMapKey(const FVector location) { return FVector((int32(location.X) / 100) * 100, (int32(location.Y) / 100) * 100, 0.0f); };
 
 		

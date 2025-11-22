@@ -50,6 +50,15 @@ public:
 
 	void UpdateThreatLevels() override;
 
+	/**
+	* Returns a list of locations that were safe the last time this team saw them
+	* @param location where to search from
+	* @param threatLevel the threat level to search for 0 fully safe, 1 equal danger to this team, > 1 more danger than this team. i.e. values 0 - 1 are relativlely safe values above 1 could be considered dangerous
+	* @param range the search radius
+	*/
+	UFUNCTION(BlueprintCallable, Category = "ArgusAIControllerRTS")
+	TArray<FVector> GetNearestSafeLocations(const FVector location, const double threatLevel, const float range) override;
+
 protected:
 	//UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "ArgusAIControllerRTS")
 	//TArray<TSubclassOf<AArgusActor>> m_requiredClasses;

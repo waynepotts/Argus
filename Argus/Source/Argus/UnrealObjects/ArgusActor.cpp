@@ -343,18 +343,19 @@ inline void AArgusActor::StartNextQueuedTask()
 				{
 					targetingComponent->m_targetEntityId = queuedTask.m_targetEntityId;
 					targetingComponent->m_targetLocation.Reset();
-					taskComponent->m_movementState = queuedTask.m_movementState;
+					// only start the task if the target entity is still alive
+					taskComponent->StartQueuedTask(queuedTask);
 				}
 			}
 			else if (queuedTask.m_movementState == EMovementState::ProcessMoveToLocationCommand)
 			{
 				targetingComponent->m_targetEntityId = ArgusEntity::k_emptyEntity.GetId();
 				targetingComponent->m_targetLocation = queuedTask.m_targetLocation;
-				taskComponent->m_movementState = queuedTask.m_movementState;
+				taskComponent->StartQueuedTask(queuedTask);
 			}
-			else if (queuedTask.m_abilityState != EAbilityState::None)
+			else
 			{
-				taskComponent->m_abilityState = queuedTask.m_abilityState;
+				taskComponent->StartQueuedTask(queuedTask);
 			}
 		}
 	}
@@ -621,7 +622,7 @@ void AArgusActor::OnArgusEntityAbilityAtLocation_Implementation(int32 abilityId,
 	QueueCastAbility(abilityId);
 
 }
-void AArgusActor::OnArgusEntityAbility_Implementation(int32 abilityId)
+void AArgusActor::CastArgusEntityAbility_Implementation(int32 abilityId)
 {
 	if (abilityId < 0 || abilityId > 3)
 	{
@@ -652,6 +653,11 @@ void AArgusActor::OnArgusEntityAbility_Implementation(int32 abilityId)
 			break;
 		}
 	}
+}
+
+bool AArgusActor::IsValidBuildLocation_Implementation(FVector location)
+{
+	return m_entity && m_entity.IsValidBuildLocation(location);
 }
 
 void AArgusActor::QueueMoveToLocation(FVector targetLocation)

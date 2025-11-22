@@ -51,4 +51,6 @@ public:
 
 	virtual bool GetMemory(AArgusActor* actor, FLocationMemory& memory);
 
+	virtual TArray<FVector> GetNearestSafeLocations(const FVector location, const double threatLevel, const float range);
+
 };
