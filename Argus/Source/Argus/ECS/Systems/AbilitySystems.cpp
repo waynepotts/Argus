@@ -292,6 +292,10 @@ bool AbilitySystems::CastSpawnAbility(const UAbilityRecord* abilityRecord, const
 		spawnInfo.m_spawnLocationOverride = components.m_reticleComponent->m_reticleLocation;
 		spawnLocation = components.m_reticleComponent->m_reticleLocation;
 	}
+	else
+	{
+		spawnLocation.X += components.m_transformComponent->m_radius * 2.0f;
+	}
 	ArgusEntity entity = components.m_entity;
 	bool bValidLocation = entity.IsValidBuildLocation(spawnLocation);
 	
