@@ -8,8 +8,6 @@ Over time, this project has morphed out of the realm of an experiment, and close
 
 
 
-Detailed documentation, examples, resources, and reasonings will be added over time to the [Argus Wiki](https://github.com/Karazaa/Argus/wiki). It is there where I will one day begin documenting the high level structure, program flow, and future plans. All short-medium term tasks are going to be tracked via [GitHub Issues](https://github.com/Karazaa/Argus/issues).
-
 
 
 # How to Run Argus
