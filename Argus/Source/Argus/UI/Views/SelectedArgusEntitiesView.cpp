@@ -6,6 +6,7 @@
 #include "ArgusLogging.h"
 #include "ArgusStaticData.h"
 #include "Components/Button.h"
+#include "Components/CheckBox.h"
 #include "Views/MultipleSelectedEntitiesView.h"
 #include "Views/SingleSelectedEntityView.h"
 
@@ -22,16 +23,21 @@ void USelectedArgusEntitiesView::NativeConstruct()
 	ARGUS_RETURN_ON_NULL(m_abilityButton1, ArgusUILog);
 	ARGUS_RETURN_ON_NULL(m_abilityButton2, ArgusUILog);
 	ARGUS_RETURN_ON_NULL(m_abilityButton3, ArgusUILog);
+	ARGUS_RETURN_ON_NULL(m_forceAttackButton, ArgusUILog);
 	ARGUS_RETURN_ON_NULL(m_singleSelectedEntityWidget, ArgusUILog);
 	ARGUS_RETURN_ON_NULL(m_multipleSelectedEntitiesWidget, ArgusUILog);
 	m_abilityButton0->OnClicked.AddDynamic(this, &USelectedArgusEntitiesView::OnClickedAbilityButton0);
 	m_abilityButton1->OnClicked.AddDynamic(this, &USelectedArgusEntitiesView::OnClickedAbilityButton1);
 	m_abilityButton2->OnClicked.AddDynamic(this, &USelectedArgusEntitiesView::OnClickedAbilityButton2);
 	m_abilityButton3->OnClicked.AddDynamic(this, &USelectedArgusEntitiesView::OnClickedAbilityButton3);
+	m_forceAttackButton->OnCheckStateChanged.AddDynamic(this, &USelectedArgusEntitiesView::OnStateChangeForceAttackButton);
+	//m_forceAttackButton->OnCheckStateChanged.AddDynamic(m_inputManager.Get(), &UArgusInputManager::ProcessForceAttackInputEvent);
+
 	m_singleSelectedEntityWidget->SetVisibility(ESlateVisibility::Collapsed);
 	m_multipleSelectedEntitiesWidget->SetVisibility(ESlateVisibility::Collapsed);
 	m_singleSelectedEntityWidget->SetInputManager(m_inputManager.Get());
 	m_multipleSelectedEntitiesWidget->SetInputManager(m_inputManager.Get());
+	
 }
 
 void USelectedArgusEntitiesView::UpdateDisplay(const UpdateDisplayParameters& updateDisplayParams)
@@ -48,6 +54,10 @@ void USelectedArgusEntitiesView::UpdateDisplay(const UpdateDisplayParameters& up
 	else if (m_multipleSelectedEntitiesWidget->IsVisible())
 	{
 		m_multipleSelectedEntitiesWidget->UpdateDisplay(updateDisplayParams);
+	}
+	if (m_forceAttackButton->IsChecked())
+	{
+		m_forceAttackButton->SetIsChecked(m_inputManager->m_bForceAttack);
 	}
 }
 
@@ -246,6 +256,19 @@ void USelectedArgusEntitiesView::OnClickedAbilityButton3()
 	}
 
 	m_inputManager->OnUserInterfaceButtonClicked(UArgusInputManager::InputType::Ability3);
+}
+
+void USelectedArgusEntitiesView::OnStateChangeForceAttackButton(bool isChecked)
+{
+	if (!m_inputManager.IsValid())
+	{
+		ARGUS_LOG(ArgusUILog, Error, TEXT("[%s] Invalid reference to %s"), ARGUS_FUNCNAME, ARGUS_NAMEOF(m_inputManager));
+		return;
+	}
+	if (isChecked)
+	{
+		m_inputManager->OnUserInterfaceButtonClicked(UArgusInputManager::InputType::ForceAttack);
+	}
 }
 
 void USelectedArgusEntitiesView::RemoveTemplateEntityObserver()

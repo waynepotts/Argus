@@ -36,6 +36,9 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void RegisterArgusAIController(ETeam team, AArgusAIController* argusAIController);
 
+	UFUNCTION(BlueprintCallable)
+	AController* GetTeamController(ETeam team) const;
+
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Singleton")
 	TSoftObjectPtr<UArgusEntityTemplate> m_singletonTemplate = nullptr;

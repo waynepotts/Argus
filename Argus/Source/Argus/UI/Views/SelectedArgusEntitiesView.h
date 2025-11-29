@@ -13,6 +13,7 @@ class ArgusEntity;
 class UAbilityRecord;
 class UArgusInputManager;
 class UButton;
+class UCheckBox;
 class UMultipleSelectedEntitiesView;
 class USingleSelectedEntityView;
 
@@ -40,6 +41,9 @@ protected:
 
 	UFUNCTION()
 	void OnClickedAbilityButton3();
+
+	UFUNCTION()
+	void OnStateChangeForceAttackButton(bool IsChecked);
 
 	UPROPERTY(EditDefaultsOnly)
 	bool m_shouldBlockCameraPanning = true;
@@ -70,6 +74,9 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Transient)
 	TObjectPtr<UButton> m_abilityButton3 = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, Transient)
+	TObjectPtr<UCheckBox> m_forceAttackButton = nullptr;
 
 	virtual void NativeOnMouseEnter(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent) override;
 	virtual void NativeOnMouseLeave(const FPointerEvent& InMouseEvent) override;

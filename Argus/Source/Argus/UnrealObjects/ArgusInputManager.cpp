@@ -273,6 +273,12 @@ void UArgusInputManager::OnCameraPanningY(const FInputActionValue& value)
 	m_inputEventsThisFrame.Emplace(InputCache(InputType::CameraPanningY, value));
 }
 
+void UArgusInputManager::OnForceAttack(const FInputActionValue& value)
+{
+	ARGUS_MEMORY_TRACE(ArgusInputManager);
+	m_inputEventsThisFrame.Emplace(InputCache(InputType::ForceAttack, value));
+}
+
 #pragma endregion
 
 void UArgusInputManager::ProcessPlayerInput(AArgusCameraActor* argusCamera, const AArgusCameraActor::UpdateCameraPanningParameters& updateCameraParameters, float deltaTime)
@@ -517,6 +523,10 @@ void UArgusInputManager::BindActions(TSoftObjectPtr<UArgusInputActionSet>& argus
 	{
 		enhancedInputComponent->BindAction(cameraPanningY, ETriggerEvent::Triggered, this, &UArgusInputManager::OnCameraPanningY);
 	}
+	if (const UInputAction* forceAttack = actionSet->m_forceAttack.LoadSynchronous())
+	{
+		enhancedInputComponent->BindAction(forceAttack, ETriggerEvent::Triggered, this, &UArgusInputManager::OnForceAttack);
+	}
 }
 
 bool UArgusInputManager::ValidateOwningPlayerController()
@@ -653,6 +663,9 @@ void UArgusInputManager::ProcessInputEvent(AArgusCameraActor* argusCamera, const
 			break;
 		case InputType::CameraPanningY:
 			ProcessCameraPanningY(argusCamera, inputType.m_value);
+			break;
+		case InputType::ForceAttack:
+			ProcessForceAttackInputEvent(true);
 			break;
 		default:
 			break;
@@ -944,6 +957,7 @@ void UArgusInputManager::ProcessMoveToInputEvent()
 		m_owningPlayerController->ArgusActorMoveToLocation(selectedActor.Get(), inputMovementState, targetActor, targetLocation);
 		
 	}
+	m_bForceAttack = false;
 }
 
 void UArgusInputManager::ProcessMoveToInputEventPerSelectedActor(AArgusActor* argusActor, EMovementState inputMovementState, ArgusEntity targetEntity, FVector targetLocation)
@@ -990,6 +1004,14 @@ void UArgusInputManager::ProcessMoveToInputEventPerSelectedActor(AArgusActor* ar
 			
 			targetingComponent->m_targetEntityId = targetEntity.GetId();
 			targetingComponent->m_targetLocation.Reset();
+			if (m_bForceAttack)
+			{
+				argusActor->OnForceAttack(argusActor->GetCurrentTargetActor());
+			}
+			else
+			{
+				argusActor->OnForceAttack(nullptr);
+			}
 		}
 	}
 	else if (inputMovementState == EMovementState::ProcessMoveToLocationCommand)
@@ -1354,6 +1376,11 @@ void UArgusInputManager::ProcessCameraPanningY(AArgusCameraActor* argusCamera, c
 
 	ARGUS_RETURN_ON_NULL(argusCamera, ArgusInputLog);
 	argusCamera->UpdateCameraPanningY(translateValue);
+}
+
+void UArgusInputManager::ProcessForceAttackInputEvent(bool bForceAttack)
+{
+	m_bForceAttack = bForceAttack;
 }
 
 #pragma endregion

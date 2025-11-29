@@ -35,8 +35,8 @@ bool CombatSystems::CanEntityAttackOtherEntity(const ArgusEntity& potentialAttac
 	{
 		return false;
 	}
-
-	if (victimIdentityComponent->IsInTeamMask(attackerIdentityComponent->m_allies))
+	const bool bIsForceAttack = attackerCombatComponent->m_forceAttackEntityId == potentialVictim.GetId();
+	if (victimIdentityComponent->IsInTeamMask(attackerIdentityComponent->m_allies) && !bIsForceAttack)
 	{
 		return false;
 	}
@@ -57,25 +57,25 @@ bool CombatSystems::CanEntityAttackOtherEntity(const ArgusEntity& potentialAttac
 
 	switch (attackerCombatComponent->m_rangedAttackCapability)
 	{
-		case ERangedAttackCapability::GroundedOnly:
-			if (const TaskComponent* victimTaskComponent = potentialVictim.GetComponent<TaskComponent>())
-			{
-				return victimTaskComponent->m_flightState == EFlightState::Grounded || victimTaskComponent->m_flightState == EFlightState::Landing;
-			}
-			return true;
+	case ERangedAttackCapability::GroundedOnly:
+		if (const TaskComponent* victimTaskComponent = potentialVictim.GetComponent<TaskComponent>())
+		{
+			return victimTaskComponent->m_flightState == EFlightState::Grounded || victimTaskComponent->m_flightState == EFlightState::Landing;
+		}
+		return true;
 
-		case ERangedAttackCapability::FlyingOnly:
-			if (const TaskComponent* victimTaskComponent = potentialVictim.GetComponent<TaskComponent>())
-			{
-				return victimTaskComponent->m_flightState == EFlightState::Flying || victimTaskComponent->m_flightState == EFlightState::TakingOff;
-			}
-			return false;
+	case ERangedAttackCapability::FlyingOnly:
+		if (const TaskComponent* victimTaskComponent = potentialVictim.GetComponent<TaskComponent>())
+		{
+			return victimTaskComponent->m_flightState == EFlightState::Flying || victimTaskComponent->m_flightState == EFlightState::TakingOff;
+		}
+		return false;
 
-		case ERangedAttackCapability::GroundedAndFlying:
-			return true;
+	case ERangedAttackCapability::GroundedAndFlying:
+		return true;
 
-		default:
-			break;
+	default:
+		break;
 	}
 
 	return true;

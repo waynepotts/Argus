@@ -102,4 +102,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSoftObjectPtr<UInputAction> m_cameraPanningY = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSoftObjectPtr<UInputAction> m_forceAttack = nullptr;
 };

@@ -82,4 +82,5 @@ protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Argus AIController")
 	TMap<ETeam, float> m_teamThreatLevels;
 
+	virtual void BeginPlay() override;
 };

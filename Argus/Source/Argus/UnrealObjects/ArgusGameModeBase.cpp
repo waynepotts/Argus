@@ -58,6 +58,11 @@ void AArgusGameModeBase::RegisterArgusAIController(ETeam team, AArgusAIControlle
 	m_teamController.Add(team, argusAIController);
 }
 
+AController* AArgusGameModeBase::GetTeamController(ETeam team) const
+{
+	return m_teamController.Contains(team) ? *m_teamController.Find(team) : nullptr;
+}
+
 void AArgusGameModeBase::Tick(float deltaTime)
 {
 	ARGUS_TRACE(AArgusGameModeBase::Tick);

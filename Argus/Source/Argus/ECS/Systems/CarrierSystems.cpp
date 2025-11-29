@@ -11,6 +11,10 @@ bool CarrierSystems::CanEntityCarryOtherEntity(const ArgusEntity& entity, const 
 	{
 		return false;
 	}
+	if(otherEntity.IsForceAttackOtherEntity(entity))
+	{
+		return false;
+	}
 
 	if (!entity.IsOnSameTeamAsOtherEntity(otherEntity))
 	{

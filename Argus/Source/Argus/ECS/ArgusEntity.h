@@ -68,6 +68,7 @@ public:
 	bool HasExtractableResources() const;
 	bool IsOnEnemyTeam(ETeam team) const;
 	bool IsValidBuildLocation(FVector location);
+	bool IsForceAttackOtherEntity(const ArgusEntity& other) const;
 
 	ETeamRelationship GetTeamRelationship(const ETeam team) const;
 

@@ -660,6 +660,15 @@ bool AArgusActor::IsValidBuildLocation_Implementation(FVector location)
 	return m_entity && m_entity.IsValidBuildLocation(location);
 }
 
+void AArgusActor::OnForceAttack(AArgusActor* targetActor)
+{
+	uint16 targetEntityId = (targetActor) ? targetActor->GetEntity().GetId() : ArgusECSConstants::k_maxEntities;
+	if (CombatComponent* combatComponent = m_entity.GetComponent<CombatComponent>())
+	{
+		combatComponent->m_forceAttackEntityId = targetEntityId;
+	}
+}
+
 void AArgusActor::QueueMoveToLocation(FVector targetLocation)
 {
 	if (TaskComponent* taskComponent = m_entity.GetComponent<TaskComponent>())

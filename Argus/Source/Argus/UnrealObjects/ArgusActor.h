@@ -92,6 +92,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BLueprintCallable)
 	void SetMoveToActor(AActor* targetActor, bool bClearWaypoints);
 
+	//UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
+	void OnForceAttack(AArgusActor* targetActor);
+
 	UFUNCTION(BlueprintCallable)
 	void StartNextQueuedTask();
 	/**
@@ -175,6 +178,7 @@ protected:
 	void UpdateUIWidgetComponentLocation();
 	void FixupTransformForFlying();
 
+	UFUNCTION(BlueprintCallable)
 	ETeam GetTeam() const;
 
 private:

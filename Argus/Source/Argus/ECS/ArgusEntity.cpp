@@ -8,6 +8,7 @@
 
 #if !UE_BUILD_SHIPPING
 #include "ArgusECSDebugger.h"
+#include "ArgusActor.h"
 #endif //!UE_BUILD_SHIPPING
 
 const ArgusEntity ArgusEntity::k_emptyEntity = ArgusEntity();
@@ -197,6 +198,16 @@ bool ArgusEntity::IsValidBuildLocation(FVector location)
 	}
 
 	return !anyFound;
+}
+
+bool ArgusEntity::IsForceAttackOtherEntity(const ArgusEntity& other) const
+{
+	if(const CombatComponent* combatComponent = GetComponent<CombatComponent>())
+	{
+		return combatComponent->m_forceAttackEntityId == other.GetId();
+	}
+
+	return false;
 }
 
 ArgusEntity::ArgusEntity(const ArgusEntity& other)

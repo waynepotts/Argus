@@ -187,4 +187,19 @@ void AArgusAIController::UpdateThreatLevels()
 {
 }
 
+void AArgusAIController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	const UWorld* world = GetWorld();
+	if (!world)
+	{
+		return;
+	}
+	if(AArgusGameModeBase* gameMode = Cast<AArgusGameModeBase>(world->GetAuthGameMode()))
+	{
+		gameMode->RegisterArgusAIController(m_playerTeam, this);
+	}
+}
+
 

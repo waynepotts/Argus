@@ -5,6 +5,7 @@
 #include "ComponentDependencies/Timer.h"
 #include "CoreMinimal.h"
 #include "ArgusMacros.h"
+#include "ArgusECSConstants.h"
 #include "CombatComponent.generated.h"
 
 UENUM(BlueprintType)
@@ -37,4 +38,7 @@ struct CombatComponent
 
 	ARGUS_IGNORE()
 	TimerHandle m_attackTimerHandle;
+
+	ARGUS_IGNORE()
+	uint16 m_forceAttackEntityId = ArgusECSConstants::k_maxEntities;
 };

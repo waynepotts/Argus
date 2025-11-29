@@ -57,7 +57,8 @@ public:
 		ChangeActiveAbilityGroup,
 		UserInterfaceEntityClicked,
 		CameraPanningX,
-		CameraPanningY
+		CameraPanningY,
+		ForceAttack
 	};
 	static bool ShouldUpdateSelectedActorDisplay(ArgusEntity& templateSelectedEntity);
 
@@ -94,6 +95,8 @@ public:
 	void OnChangeActiveAbilityGroup(const FInputActionValue& value);
 	void OnCameraPanningX(const FInputActionValue& value);
 	void OnCameraPanningY(const FInputActionValue& value);
+	void OnForceAttack(const FInputActionValue& value);
+
 
 	void ProcessPlayerInput(AArgusCameraActor* argusCamera, const AArgusCameraActor::UpdateCameraPanningParameters& updateCameraPanningParameters, float deltaTime);
 	
@@ -105,6 +108,10 @@ public:
 
 	const FVector& GetSelectionStartWorldSpaceLocation() const;
 	const FVector2D GetSelectionStartScreenSpaceLocation() const;
+
+	bool m_bForceAttack = false;
+
+	void ProcessForceAttackInputEvent(bool bForceAttack);
 
 private:
 	struct InputCache
@@ -146,7 +153,7 @@ private:
 	void ProcessUserInterfaceEntityClicked(const ArgusEntity& entity);
 	void ProcessCameraPanningX(AArgusCameraActor* argusCamera, const FInputActionValue& value);
 	void ProcessCameraPanningY(AArgusCameraActor* argusCamera, const FInputActionValue& value);
-
+	
 	void AddSelectedActorExclusive(AArgusActor* argusActor);
 	void AddSelectedActorAdditive(AArgusActor* argusActor);
 	void AddMarqueeSelectedActorsExclusive(const TArray<AArgusActor*>& marqueeSelectedActors);
@@ -162,4 +169,5 @@ private:
 	FVector m_cachedLastSelectInputWorldSpaceLocation = FVector::ZeroVector;
 	bool m_selectInputDown = false;
 	bool m_canRotateCamera = false;
+	
 };
