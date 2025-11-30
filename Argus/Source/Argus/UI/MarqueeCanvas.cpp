@@ -8,6 +8,14 @@
 #include "Components/CanvasPanel.h"
 #include "Slate/SlateBrushAsset.h"
 
+UMarqueeCanvas::UMarqueeCanvas()
+{
+	m_modifierKeys.Add(EModifierType::NoModifier, FLinearColor::Green);
+	m_modifierKeys.Add(EModifierType::Shift, FLinearColor::Blue);
+	m_modifierKeys.Add(EModifierType::Control, FLinearColor::Red);
+
+}
+
 void UMarqueeCanvas::UpdateDisplay(const UpdateDisplayParameters& updateDisplayParams)
 {
 	Super::UpdateDisplay(updateDisplayParams);
@@ -63,10 +71,10 @@ int32 UMarqueeCanvas::NativePaint(const FPaintArgs& args, const FGeometry& allot
 	}
 	const FVector2D topLeft = FVector2D::Min(m_marqueeBoxPoints[0], m_marqueeBoxPoints[2]);
 	const FVector2D bottomRight = FVector2D::Max(m_marqueeBoxPoints[0], m_marqueeBoxPoints[2]);
-
+	FLinearColor color = m_modifierKeys[static_cast<EModifierType>(m_modifierKeysNum)]; // m_modifierKeys[m_modifierKey];
 	FPaintContext context = FPaintContext(allottedGeometry, myCullingRect, outDrawElements, layerId, inWidgetStyle, parentEnabled);
 	UWidgetBlueprintLibrary::DrawBox(context, topLeft, bottomRight - topLeft, m_marqueeBoxBrushAsset, m_marqueeBoxFillColor);
-	UWidgetBlueprintLibrary::DrawLines(context, m_marqueeBoxPoints, m_marqueeBoxColor, false, m_marqueeBoxThickness);
+	UWidgetBlueprintLibrary::DrawLines(context, m_marqueeBoxPoints, color, false, m_marqueeBoxThickness);
 	
 	return FMath::Max(newLayerId, context.MaxLayer);
 }

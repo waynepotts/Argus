@@ -9,6 +9,7 @@
 #include "GameFramework/PlayerController.h"
 #include "InputMappingContext.h"
 #include "Kismet/GameplayStatics.h"
+#include "MarqueeCanvas.h"
 
 #include "ArgusController.h"
 
@@ -64,6 +65,8 @@ public:
 	void InitializeUIWidgets();
 
 	UArgusInputManager* GetInputManager() const { return m_argusInputManager; }
+
+	void SetModifierPressed(const EModifierType modifierType, const bool bPressed);
 
 	/**
 	* Function to show a move to location effect for an ArgusActor. N.B. the effect would be called for each selected actor, so if you're moving 5 selected actors, this would be called 5 times.

@@ -14,6 +14,8 @@
 #include "ReticleActor.h"
 #include "Slate/SceneViewport.h"
 
+#include "MarqueeCanvas.h"
+
 
 AArgusPlayerController::AArgusPlayerController()
 {
@@ -198,6 +200,22 @@ void AArgusPlayerController::InitializeUIWidgets()
 	{
 		m_teamResourcesUserWidget->SetInputManager(m_argusInputManager);
 		m_teamResourcesUserWidget->AddToViewport();
+	}
+}
+
+void AArgusPlayerController::SetModifierPressed(const EModifierType modifierType, const bool bPressed)
+{
+	if (UMarqueeCanvas* canvas = Cast<UMarqueeCanvas>(m_baseCanvasUserWidget))
+	{
+		if (bPressed)
+		{
+			canvas->AddModifierKey(modifierType);
+		}
+		else
+		{
+			canvas->RemoveModifierKey(modifierType);
+		}
+		
 	}
 }
 

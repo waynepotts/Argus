@@ -10,15 +10,37 @@ class ArgusEntity;
 class UArgusInputManager;
 class UCanvasPanel;
 
+UENUM(BlueprintType)
+enum class EModifierType : uint8
+{
+	NoModifier = 0
+	, Shift = 1
+	, Control = 2
+	, Alt = 3
+	, Super = 4
+	, Meta = 5
+
+};
+ENUM_CLASS_FLAGS(EModifierType);
+
 UCLASS()
 class UMarqueeCanvas : public UArgusUIElement
 {
 	GENERATED_BODY()
 
 public:
+	UMarqueeCanvas();
 	virtual void UpdateDisplay(const UpdateDisplayParameters& updateDisplayParams) override;
-
+	UFUNCTION(BlueprintCallable, Category = "Marquee Canvas")
+	void AddModifierKey(EModifierType modifierKey) { m_modifierKeysNum |= (static_cast<uint8>(modifierKey)); }
+	void RemoveModifierKey(EModifierType modifierKey) { m_modifierKeysNum &= ~(static_cast<uint8>(modifierKey)); }
 protected:
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Marquee Canvas")
+	TMap<EModifierType, FLinearColor> m_modifierKeys;
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = "Marquee Canvas")
+	uint8 m_modifierKeysNum = 0u;
+
 	UPROPERTY(EditDefaultsOnly)
 	FLinearColor m_marqueeBoxColor = FColor::Green;
 	UPROPERTY(EditDefaultsOnly)

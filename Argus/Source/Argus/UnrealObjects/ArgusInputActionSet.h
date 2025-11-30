@@ -26,6 +26,9 @@ public:
 	TSoftObjectPtr<UInputAction> m_marqueeSelectAdditiveAction = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSoftObjectPtr<UInputAction> m_marqueeAttackAction = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSoftObjectPtr<UInputAction> m_moveToAction = nullptr;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
@@ -105,4 +108,7 @@ public:
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	TSoftObjectPtr<UInputAction> m_forceAttack = nullptr;
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere)
+	TSoftObjectPtr<UInputAction> m_ctrlPressed = nullptr;
 };

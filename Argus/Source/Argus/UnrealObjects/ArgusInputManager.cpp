@@ -107,6 +107,12 @@ void UArgusInputManager::OnMarqueeSelectAdditive(const FInputActionValue& value)
 	m_inputEventsThisFrame.Emplace(InputCache(InputType::MarqueeSelectAdditive, value));
 }
 
+void UArgusInputManager::OnMarqueeAttack(const FInputActionValue& value)
+{
+	ARGUS_MEMORY_TRACE(ArgusInputManager);
+	m_inputEventsThisFrame.Emplace(InputCache(InputType::MarqueeAttack, value));
+}
+
 void UArgusInputManager::OnMoveTo(const FInputActionValue& value)
 {
 	ARGUS_MEMORY_TRACE(ArgusInputManager);
@@ -279,6 +285,18 @@ void UArgusInputManager::OnForceAttack(const FInputActionValue& value)
 	m_inputEventsThisFrame.Emplace(InputCache(InputType::ForceAttack, value));
 }
 
+void UArgusInputManager::OnControlPressed(const FInputActionValue& value)
+{
+	ARGUS_MEMORY_TRACE(ArgusInputManager);
+	m_inputEventsThisFrame.Emplace(InputCache(InputType::ControlPressed, value));
+}
+
+void UArgusInputManager::OnControlReleased(const FInputActionValue& value)
+{
+	ARGUS_MEMORY_TRACE(ArgusInputManager);
+	m_inputEventsThisFrame.Emplace(InputCache(InputType::ControlReleased, value));
+}
+
 #pragma endregion
 
 void UArgusInputManager::ProcessPlayerInput(AArgusCameraActor* argusCamera, const AArgusCameraActor::UpdateCameraPanningParameters& updateCameraParameters, float deltaTime)
@@ -419,6 +437,10 @@ void UArgusInputManager::BindActions(TSoftObjectPtr<UArgusInputActionSet>& argus
 	{
 		enhancedInputComponent->BindAction(marqueeSelectAdditiveAction, ETriggerEvent::Triggered, this, &UArgusInputManager::OnMarqueeSelectAdditive);
 	}
+	if (const UInputAction* marqueeAttackAction = actionSet->m_marqueeAttackAction.LoadSynchronous())
+	{
+		enhancedInputComponent->BindAction(marqueeAttackAction, ETriggerEvent::Triggered, this, &UArgusInputManager::OnMarqueeAttack);
+	}
 	if (const UInputAction* moveToAction = actionSet->m_moveToAction.LoadSynchronous())
 	{
 		enhancedInputComponent->BindAction(moveToAction, ETriggerEvent::Triggered, this, &UArgusInputManager::OnMoveTo);
@@ -527,6 +549,11 @@ void UArgusInputManager::BindActions(TSoftObjectPtr<UArgusInputActionSet>& argus
 	{
 		enhancedInputComponent->BindAction(forceAttack, ETriggerEvent::Triggered, this, &UArgusInputManager::OnForceAttack);
 	}
+	if (const UInputAction* ctrlPressed = actionSet->m_ctrlPressed.LoadSynchronous())
+	{
+		enhancedInputComponent->BindAction(ctrlPressed, ETriggerEvent::Triggered, this, &UArgusInputManager::OnControlPressed);
+		enhancedInputComponent->BindAction(ctrlPressed, ETriggerEvent::Completed, this, &UArgusInputManager::OnControlReleased);
+	}
 }
 
 bool UArgusInputManager::ValidateOwningPlayerController()
@@ -570,6 +597,9 @@ void UArgusInputManager::ProcessInputEvent(AArgusCameraActor* argusCamera, const
 			break;
 		case InputType::MarqueeSelectAdditive:
 			ProcessMarqueeSelectInputEvent(argusCamera, true);
+			break;
+		case InputType::MarqueeAttack:
+			ProcessMarqueeAttackActors(GetMarqueeActors(argusCamera, ETeamRelationship::ENEMY));
 			break;
 		case InputType::MoveTo:
 			InterruptReticle();
@@ -667,6 +697,13 @@ void UArgusInputManager::ProcessInputEvent(AArgusCameraActor* argusCamera, const
 		case InputType::ForceAttack:
 			ProcessForceAttackInputEvent(true);
 			break;
+		case InputType::ControlPressed:
+			ProcessControlPressed(true);
+
+			break;
+		case InputType::ControlReleased:
+			ProcessControlPressed(false);
+			break;
 		default:
 			break;
 	}
@@ -743,7 +780,7 @@ void UArgusInputManager::ProcessSelectInputEvent(bool isAdditive)
 	}
 }
 
-void UArgusInputManager::ProcessMarqueeSelectInputEvent(const AArgusCameraActor* argusCamera, bool isAdditive)
+void UArgusInputManager::ProcessMarqueeSelectInputEvent(const AArgusCameraActor* argusCamera, const bool isAdditive)
 {
 	if (!ValidateOwningPlayerController() || !argusCamera)
 	{
@@ -823,7 +860,7 @@ void UArgusInputManager::ProcessMarqueeSelectInputEvent(const AArgusCameraActor*
 	{
 		m_owningPlayerController->FilterArgusActorsToPlayerTeam(actorsWithinBounds);
 	}
-	
+
 	const int numFoundEntities = actorsWithinBounds.Num();
 	if (CVarEnableVerboseArgusInputLogging.GetValueOnGameThread())
 	{
@@ -847,6 +884,213 @@ void UArgusInputManager::ProcessMarqueeSelectInputEvent(const AArgusCameraActor*
 		AddMarqueeSelectedActorsAdditive(actorsWithinBounds);
 	}
 }
+
+void UArgusInputManager::ProcessMarqueeAttackActors(TArray<AArgusActor*> attackActors)
+{
+	if (m_selectedArgusActors.Num() > 0 && attackActors.Num() > 0)
+	{
+		TWeakObjectPtr<AArgusActor> arbitraryActor = *m_selectedArgusActors.FindArbitraryElement();
+		const FVector location = arbitraryActor->GetActorLocation();
+		// sort the actors so our selected actors will all attack the same roughly closest actor first
+		attackActors.Sort([location](const AArgusActor& A, const AArgusActor& B) { 
+			double distA = FVector::DistSquared(A.GetActorLocation(), location);
+			double distB = FVector::DistSquared(B.GetActorLocation(), location);
+			return distA > distB; 
+			});
+
+		for (auto& actor : m_selectedArgusActors)
+		{
+			for (const auto& attackActor : attackActors)
+			{
+				if (actor == attackActor)
+				{
+					continue;
+				}
+				actor->QueueInteractWithActor(attackActor);
+			}
+			
+		}
+	}
+}
+
+TArray<AArgusActor*> UArgusInputManager::GetMarqueeActors(const AArgusCameraActor* argusCamera, const ETeamRelationship teamRelationship)
+{
+	if (!ValidateOwningPlayerController() || !argusCamera)
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
+	if (!singletonEntity)
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	SpatialPartitioningComponent* spatialPartitioningComponent = singletonEntity.GetComponent<SpatialPartitioningComponent>();
+	if (!spatialPartitioningComponent)
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	const FHitResult hitResult = *m_frameInputHitResult;
+	if (!hitResult.IsValidBlockingHit())
+	{
+		return TArray<AArgusActor*>();
+	}
+	m_selectInputDown = false;
+
+	if (const ReticleComponent* reticleComponent = singletonEntity.GetComponent<ReticleComponent>())
+	{
+		if (reticleComponent->IsReticleEnabled())
+		{
+			ProcessReticleAbilityForSelectedEntities(reticleComponent);
+			return TArray<AArgusActor*>();
+		}
+	}
+
+	TArray<FVector2D> groundConvexPolygon;
+	TArray<FVector2D> flyingConvexPolygon;
+	groundConvexPolygon.SetNumZeroed(4);
+	flyingConvexPolygon.SetNumZeroed(4);
+	groundConvexPolygon[0] = FVector2D(m_cachedLastSelectInputWorldSpaceLocation);
+	groundConvexPolygon[2] = FVector2D(hitResult.Location);
+
+	FVector direction0 = argusCamera->GetActorLocation() - m_cachedLastSelectInputWorldSpaceLocation;
+	FVector direction2 = argusCamera->GetActorLocation() - hitResult.Location;
+	direction0 *= ArgusMath::SafeDivide(1.0f, direction0.Z, 0.0f) * spatialPartitioningComponent->m_flyingPlaneHeight;
+	direction2 *= ArgusMath::SafeDivide(1.0f, direction2.Z, 0.0f) * spatialPartitioningComponent->m_flyingPlaneHeight;
+	flyingConvexPolygon[0] = FVector2D(m_cachedLastSelectInputWorldSpaceLocation + direction0);
+	flyingConvexPolygon[2] = FVector2D(hitResult.Location + direction2);
+
+	PopulateMarqueeSelectPolygon(argusCamera, groundConvexPolygon);
+	PopulateMarqueeSelectPolygon(argusCamera, flyingConvexPolygon);
+
+	TArray<uint16> entityIdsWithinBounds;
+	spatialPartitioningComponent->m_argusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(entityIdsWithinBounds, groundConvexPolygon);
+
+	TArray<uint16> flyingEntityIdsWithinBounds;
+	spatialPartitioningComponent->m_flyingArgusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(flyingEntityIdsWithinBounds, flyingConvexPolygon);
+
+	entityIdsWithinBounds.Reserve(entityIdsWithinBounds.Num() + flyingEntityIdsWithinBounds.Num());
+	for (int32 i = 0; i < flyingEntityIdsWithinBounds.Num(); ++i)
+	{
+		entityIdsWithinBounds.Add(flyingEntityIdsWithinBounds[i]);
+	}
+
+	TArray<AArgusActor*> actorsWithinBounds;
+	if (!m_owningPlayerController->GetArgusActorsFromArgusEntityIds(entityIdsWithinBounds, actorsWithinBounds))
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	const ETeam playerTeam = m_owningPlayerController->GetControlledTeam();
+	return actorsWithinBounds.FilterByPredicate([playerTeam, teamRelationship](AArgusActor* argusActor) { return argusActor->GetEntity().GetTeamRelationship(playerTeam) == teamRelationship; });;
+}
+
+//void UArgusInputManager::ProcessMarqueeAttackInputEvent(const AArgusCameraActor* argusCamera)
+//{
+//	if (!ValidateOwningPlayerController() || !argusCamera)
+//	{
+//		return;
+//	}
+//
+//	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
+//	if (!singletonEntity)
+//	{
+//		return;
+//	}
+//
+//	SpatialPartitioningComponent* spatialPartitioningComponent = singletonEntity.GetComponent<SpatialPartitioningComponent>();
+//	if (!spatialPartitioningComponent)
+//	{
+//		return;
+//	}
+//
+//	const FHitResult hitResult = *m_frameInputHitResult;
+//	if (!hitResult.IsValidBlockingHit())
+//	{
+//		return;
+//	}
+//	m_selectInputDown = false;
+//
+//	if (const ReticleComponent* reticleComponent = singletonEntity.GetComponent<ReticleComponent>())
+//	{
+//		if (reticleComponent->IsReticleEnabled())
+//		{
+//			ProcessReticleAbilityForSelectedEntities(reticleComponent);
+//			return;
+//		}
+//	}
+//
+//	TArray<FVector2D> groundConvexPolygon;
+//	TArray<FVector2D> flyingConvexPolygon;
+//	groundConvexPolygon.SetNumZeroed(4);
+//	flyingConvexPolygon.SetNumZeroed(4);
+//	groundConvexPolygon[0] = FVector2D(m_cachedLastSelectInputWorldSpaceLocation);
+//	groundConvexPolygon[2] = FVector2D(hitResult.Location);
+//
+//	FVector direction0 = argusCamera->GetActorLocation() - m_cachedLastSelectInputWorldSpaceLocation;
+//	FVector direction2 = argusCamera->GetActorLocation() - hitResult.Location;
+//	direction0 *= ArgusMath::SafeDivide(1.0f, direction0.Z, 0.0f) * spatialPartitioningComponent->m_flyingPlaneHeight;
+//	direction2 *= ArgusMath::SafeDivide(1.0f, direction2.Z, 0.0f) * spatialPartitioningComponent->m_flyingPlaneHeight;
+//	flyingConvexPolygon[0] = FVector2D(m_cachedLastSelectInputWorldSpaceLocation + direction0);
+//	flyingConvexPolygon[2] = FVector2D(hitResult.Location + direction2);
+//
+//	PopulateMarqueeSelectPolygon(argusCamera, groundConvexPolygon);
+//	PopulateMarqueeSelectPolygon(argusCamera, flyingConvexPolygon);
+//
+//	TArray<uint16> entityIdsWithinBounds;
+//	spatialPartitioningComponent->m_argusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(entityIdsWithinBounds, groundConvexPolygon);
+//
+//	TArray<uint16> flyingEntityIdsWithinBounds;
+//	spatialPartitioningComponent->m_flyingArgusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(flyingEntityIdsWithinBounds, flyingConvexPolygon);
+//
+//	entityIdsWithinBounds.Reserve(entityIdsWithinBounds.Num() + flyingEntityIdsWithinBounds.Num());
+//	for (int32 i = 0; i < flyingEntityIdsWithinBounds.Num(); ++i)
+//	{
+//		entityIdsWithinBounds.Add(flyingEntityIdsWithinBounds[i]);
+//	}
+//
+//	TArray<AArgusActor*> actorsWithinBounds;
+//	if (!m_owningPlayerController->GetArgusActorsFromArgusEntityIds(entityIdsWithinBounds, actorsWithinBounds))
+//	{
+//		return;
+//	}
+//
+//	bool shouldIgnoreTeamRequirement = false;
+//
+//#if !UE_BUILD_SHIPPING
+//	shouldIgnoreTeamRequirement = ArgusECSDebugger::ShouldIgnoreTeamRequirementsForSelectingEntities();
+//#endif //!UE_BUILD_SHIPPING
+//
+//	if (!shouldIgnoreTeamRequirement)
+//	{
+//		m_owningPlayerController->FilterArgusActorsToPlayerTeam(actorsWithinBounds);
+//	}
+//
+//	const int numFoundEntities = actorsWithinBounds.Num();
+//	if (CVarEnableVerboseArgusInputLogging.GetValueOnGameThread())
+//	{
+//		ARGUS_LOG
+//		(
+//			ArgusInputLog, Display, TEXT("[%s] Did a Marquee Select from {%f, %f} to {%f, %f}. Found %d entities."),
+//			ARGUS_FUNCNAME,
+//			groundConvexPolygon[0].X, groundConvexPolygon[0].Y,
+//			groundConvexPolygon[2].X, groundConvexPolygon[2].Y,
+//			numFoundEntities
+//			
+//		);
+//	}
+//
+//	if (numFoundEntities > 0)
+//	{
+//		AddMarqueeSelectedActorsExclusive(actorsWithinBounds);
+//	}
+//	else
+//	{
+//		AddMarqueeSelectedActorsAdditive(actorsWithinBounds);
+//	}
+//}
 
 void UArgusInputManager::PopulateMarqueeSelectPolygon(const AArgusCameraActor* argusCamera, TArray<FVector2D>& convexPolygon)
 {
@@ -1376,6 +1620,20 @@ void UArgusInputManager::ProcessCameraPanningY(AArgusCameraActor* argusCamera, c
 
 	ARGUS_RETURN_ON_NULL(argusCamera, ArgusInputLog);
 	argusCamera->UpdateCameraPanningY(translateValue);
+}
+
+void UArgusInputManager::ProcessControlPressed(bool bControlPressed)
+{
+	if (CVarEnableVerboseArgusInputLogging.GetValueOnGameThread())
+	{
+		ARGUS_LOG
+		(
+			ArgusInputLog, Display, TEXT("[%s] Control button: %s"),
+			ARGUS_FUNCNAME,
+			bControlPressed ? TEXT("Pressed") : TEXT("Released")
+		);
+	}
+	m_owningPlayerController->SetModifierPressed(EModifierType::Control, bControlPressed);
 }
 
 void UArgusInputManager::ProcessForceAttackInputEvent(bool bForceAttack)

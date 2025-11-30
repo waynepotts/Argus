@@ -31,6 +31,7 @@ public:
 		SelectAdditive,
 		MarqueeSelect,
 		MarqueeSelectAdditive,
+		MarqueeAttack,
 		MoveTo,
 		SetWaypoint,
 		Zoom,
@@ -58,7 +59,9 @@ public:
 		UserInterfaceEntityClicked,
 		CameraPanningX,
 		CameraPanningY,
-		ForceAttack
+		ForceAttack,
+		ControlPressed,
+		ControlReleased
 	};
 	static bool ShouldUpdateSelectedActorDisplay(ArgusEntity& templateSelectedEntity);
 
@@ -67,6 +70,7 @@ public:
 	void OnSelectAdditive(const FInputActionValue& value);
 	void OnMarqueeSelect(const FInputActionValue& value);
 	void OnMarqueeSelectAdditive(const FInputActionValue& value);
+	void OnMarqueeAttack(const FInputActionValue& value);
 	void OnMoveTo(const FInputActionValue& value);
 	void OnSetWaypoint(const FInputActionValue& value);
 	void OnZoom(const FInputActionValue& value);
@@ -96,6 +100,10 @@ public:
 	void OnCameraPanningX(const FInputActionValue& value);
 	void OnCameraPanningY(const FInputActionValue& value);
 	void OnForceAttack(const FInputActionValue& value);
+
+	void OnControlPressed(const FInputActionValue& value);
+
+	void OnControlReleased(const FInputActionValue& value);
 
 
 	void ProcessPlayerInput(AArgusCameraActor* argusCamera, const AArgusCameraActor::UpdateCameraPanningParameters& updateCameraPanningParameters, float deltaTime);
@@ -136,7 +144,10 @@ private:
 	void PrepareToProcessInputEvents();
 	void ProcessInputEvent(AArgusCameraActor* argusCamera, const InputCache& inputEvent);
 	void ProcessSelectInputEvent(bool isAdditive);
-	void ProcessMarqueeSelectInputEvent(const AArgusCameraActor* argusCamera, bool isAdditive);
+	void ProcessMarqueeSelectInputEvent(const AArgusCameraActor* argusCamera, const bool isAdditive);
+	void ProcessMarqueeAttackActors(TArray<AArgusActor*> attackActors);
+	TArray<AArgusActor*> GetMarqueeActors(const AArgusCameraActor* argusCamera, const ETeamRelationship teamRelationship);
+
 	void PopulateMarqueeSelectPolygon(const AArgusCameraActor* argusCamera, TArray<FVector2D>& convexPolygon);
 	void ProcessMoveToInputEvent();
 	void ProcessMoveToInputEventPerSelectedActor(AArgusActor* argusActor, EMovementState inputMovementState, ArgusEntity targetEntity, FVector targetLocation);
@@ -153,6 +164,8 @@ private:
 	void ProcessUserInterfaceEntityClicked(const ArgusEntity& entity);
 	void ProcessCameraPanningX(AArgusCameraActor* argusCamera, const FInputActionValue& value);
 	void ProcessCameraPanningY(AArgusCameraActor* argusCamera, const FInputActionValue& value);
+
+	void ProcessControlPressed(bool bControlPressed);
 	
 	void AddSelectedActorExclusive(AArgusActor* argusActor);
 	void AddSelectedActorAdditive(AArgusActor* argusActor);
@@ -169,5 +182,6 @@ private:
 	FVector m_cachedLastSelectInputWorldSpaceLocation = FVector::ZeroVector;
 	bool m_selectInputDown = false;
 	bool m_canRotateCamera = false;
+
 	
 };
