@@ -89,6 +89,13 @@ void UArgusInputManager::OnSelect(const FInputActionValue& value)
 	m_inputEventsThisFrame.Emplace(InputCache(InputType::Select, value));
 }
 
+void UArgusInputManager::OnDoubleClick(const FInputActionValue& value)
+{
+	ARGUS_MEMORY_TRACE(ArgusInputManager);
+	m_inputEventsThisFrame.Emplace(InputCache(InputType::DoubleClick, value));
+	m_bDoubleClick = true;
+}
+
 void UArgusInputManager::OnSelectAdditive(const FInputActionValue& value)
 {
 	ARGUS_MEMORY_TRACE(ArgusInputManager);
@@ -329,7 +336,6 @@ void UArgusInputManager::ProcessPlayerInput(AArgusCameraActor* argusCamera, cons
 		}
 	}
 	m_frameInputHitResult = MakeShared<FHitResult>(hitResult);
-
 #if WITH_AUTOMATION_TESTS
 	if (ArgusTesting::IsInTestingContext())
 	{
@@ -356,6 +362,7 @@ void UArgusInputManager::ProcessPlayerInput(AArgusCameraActor* argusCamera, cons
 	{
 		SetCursorMoveDirection(moveDirection);
 	}
+	m_bDoubleClick = false;
 }
 
 void UArgusInputManager::SetCursorMoveDirection(const FVector camDirection)
@@ -424,6 +431,10 @@ void UArgusInputManager::BindActions(TSoftObjectPtr<UArgusInputActionSet>& argus
 	if (const UInputAction* selectAction = actionSet->m_selectAction.LoadSynchronous())
 	{
 		enhancedInputComponent->BindAction(selectAction, ETriggerEvent::Triggered, this, &UArgusInputManager::OnSelect);
+	}
+	if (const UInputAction* doubleClickAction = actionSet->m_doubleClickAction.LoadSynchronous())
+	{
+		enhancedInputComponent->BindAction(doubleClickAction, ETriggerEvent::Triggered, this, &UArgusInputManager::OnDoubleClick);
 	}
 	if (const UInputAction* selectAdditiveAction = actionSet->m_selectAdditiveAction.LoadSynchronous())
 	{
@@ -576,7 +587,7 @@ void UArgusInputManager::PrepareToProcessInputEvents()
 
 	if (CleanUpSelectedActors())
 	{
-		OnSelectedArgusArgusActorsChanged();
+		OnSelectedArgusActorsChanged();
 	}
 }
 
@@ -587,10 +598,15 @@ void UArgusInputManager::ProcessInputEvent(AArgusCameraActor* argusCamera, const
 	switch (inputType.m_type)
 	{
 		case InputType::Select:
+			if(!m_bDoubleClick)
 			ProcessSelectInputEvent(false);
 			break;
 		case InputType::SelectAdditive:
+			if(!m_bDoubleClick)
 			ProcessSelectInputEvent(true);
+			break;
+		case InputType::DoubleClick:
+			ProcessDoubleClickInputEvent(argusCamera);
 			break;
 		case InputType::MarqueeSelect:
 			ProcessMarqueeSelectInputEvent(argusCamera, false);
@@ -777,6 +793,88 @@ void UArgusInputManager::ProcessSelectInputEvent(bool isAdditive)
 			argusActor->GetEntity().GetId(),
 			isAdditive ? TEXT("Yes") : TEXT("No")
 		);
+	}
+}
+
+void UArgusInputManager::ProcessDoubleClickInputEvent(AArgusCameraActor* argusCamera)
+{
+	FVector2D ViewportSize = FVector2D(GEngine->GameViewport->Viewport->GetSizeXY());
+
+	if (!argusCamera)
+	{
+		return;
+	}
+	m_bDoubleClick = true;
+	TArray<FVector2D> groundConvexPolygon;
+	//TArray<FVector2D> flyingConvexPolygon;
+	groundConvexPolygon.SetNumZeroed(4);
+	//flyingConvexPolygon.SetNumZeroed(4);
+	groundConvexPolygon[0] = FVector2D(argusCamera->GetActorLocation());
+	groundConvexPolygon[0].X += ViewportSize.X;
+	groundConvexPolygon[0].Y -= ViewportSize.Y;
+	groundConvexPolygon[2] = FVector2D(argusCamera->GetActorLocation());
+	groundConvexPolygon[2].X -= ViewportSize.X;
+	groundConvexPolygon[2].Y += ViewportSize.Y;
+	
+	PopulateMarqueeSelectPolygon(argusCamera, groundConvexPolygon);
+	FVector start = FVector(groundConvexPolygon[0].X, groundConvexPolygon[0].Y, 5.0);
+	FVector end = FVector(groundConvexPolygon[1].X, groundConvexPolygon[1].Y, 5.0);
+	UKismetSystemLibrary::DrawDebugLine(argusCamera, start, end, FColor::Yellow, 1.0f, 1.0f);
+	TArray<uint16> entityIdsWithinBounds;
+	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
+	if (!singletonEntity)
+	{
+		return;
+	}
+	SpatialPartitioningComponent* spatialPartitioningComponent = singletonEntity.GetComponent<SpatialPartitioningComponent>();
+	if (!spatialPartitioningComponent)
+	{
+		return;
+	}
+	spatialPartitioningComponent->m_argusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(entityIdsWithinBounds, groundConvexPolygon);
+
+	//TArray<uint16> flyingEntityIdsWithinBounds;
+	//spatialPartitioningComponent->m_flyingArgusEntityKDTree.FindArgusEntityIdsWithinConvexPoly(flyingEntityIdsWithinBounds, flyingConvexPolygon);
+
+	//entityIdsWithinBounds.Reserve(entityIdsWithinBounds.Num() + flyingEntityIdsWithinBounds.Num());
+	/*for (int32 i = 0; i < flyingEntityIdsWithinBounds.Num(); ++i)
+	{
+		entityIdsWithinBounds.Add(flyingEntityIdsWithinBounds[i]);
+	}*/
+
+	TArray<AArgusActor*> actorsWithinBounds;
+	if (!m_owningPlayerController->GetArgusActorsFromArgusEntityIds(entityIdsWithinBounds, actorsWithinBounds))
+	{
+		return;
+	}
+
+	bool shouldIgnoreTeamRequirement = false;
+
+#if !UE_BUILD_SHIPPING
+	shouldIgnoreTeamRequirement = ArgusECSDebugger::ShouldIgnoreTeamRequirementsForSelectingEntities();
+#endif //!UE_BUILD_SHIPPING
+
+	if (!shouldIgnoreTeamRequirement)
+	{
+		m_owningPlayerController->FilterArgusActorsToPlayerTeam(actorsWithinBounds);
+	}
+
+	const int numFoundEntities = actorsWithinBounds.Num();
+	if (CVarEnableVerboseArgusInputLogging.GetValueOnGameThread())
+	{
+		ARGUS_LOG
+		(
+			ArgusInputLog, Display, TEXT("[%s] Did a Double Click Select from {%f, %f} to {%f, %f}. Found %d entities."),
+			ARGUS_FUNCNAME,
+			groundConvexPolygon[0].X, groundConvexPolygon[0].Y,
+			groundConvexPolygon[2].X, groundConvexPolygon[2].Y,
+			numFoundEntities
+		);
+	}
+
+	if (numFoundEntities > 0)
+	{
+		AddMarqueeSelectedActorsAdditive(actorsWithinBounds);
 	}
 }
 
@@ -1483,7 +1581,7 @@ void UArgusInputManager::ProcessControlGroup(uint8 controlGroupIndex, AArgusCame
 	}
 	m_selectedArgusActors = m_controlGroupActors[controlGroupIndex];
 	CleanUpSelectedActors();
-	OnSelectedArgusArgusActorsChanged();
+	OnSelectedArgusActorsChanged();
 
 	ArgusEntity singletonEntity = ArgusEntity::GetSingletonEntity();
 	if (!singletonEntity)
@@ -1669,7 +1767,7 @@ void UArgusInputManager::AddSelectedActorExclusive(AArgusActor* argusActor)
 	}
 	m_selectedArgusActors.Emplace(argusActor);
 
-	OnSelectedArgusArgusActorsChanged();
+	OnSelectedArgusActorsChanged();
 }
 
 void UArgusInputManager::AddSelectedActorAdditive(AArgusActor* argusActor)
@@ -1689,7 +1787,7 @@ void UArgusInputManager::AddSelectedActorAdditive(AArgusActor* argusActor)
 		m_selectedArgusActors.Emplace(argusActor);
 	}
 
-	OnSelectedArgusArgusActorsChanged();
+	OnSelectedArgusActorsChanged();
 }
 
 void UArgusInputManager::AddMarqueeSelectedActorsExclusive(const TArray<AArgusActor*>& marqueeSelectedActors)
@@ -1727,7 +1825,7 @@ void UArgusInputManager::AddMarqueeSelectedActorsAdditive(const TArray<AArgusAct
 
 	if (selectedActorsNum > 0)
 	{
-		OnSelectedArgusArgusActorsChanged();
+		OnSelectedArgusActorsChanged();
 	}
 }
 
@@ -1762,7 +1860,7 @@ bool UArgusInputManager::CleanUpSelectedActors()
 	return removedActors;
 }
 
-void UArgusInputManager::OnSelectedArgusArgusActorsChanged()
+void UArgusInputManager::OnSelectedArgusActorsChanged()
 {
 	InputInterfaceComponent* inputInterfaceComponent = ArgusEntity::GetSingletonEntity().GetComponent<InputInterfaceComponent>();
 	ARGUS_RETURN_ON_NULL(inputInterfaceComponent, ArgusInputLog);

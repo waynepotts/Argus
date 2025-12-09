@@ -28,6 +28,7 @@ public:
 	{
 		None,
 		Select,
+		DoubleClick,
 		SelectAdditive,
 		MarqueeSelect,
 		MarqueeSelectAdditive,
@@ -67,6 +68,7 @@ public:
 
 	void SetupInputComponent(AArgusPlayerController* owningPlayerController, TSoftObjectPtr<UArgusInputActionSet>& argusInputActionSet);
 	void OnSelect(const FInputActionValue& value);
+	void OnDoubleClick(const FInputActionValue& value);
 	void OnSelectAdditive(const FInputActionValue& value);
 	void OnMarqueeSelect(const FInputActionValue& value);
 	void OnMarqueeSelectAdditive(const FInputActionValue& value);
@@ -144,6 +146,7 @@ private:
 	void PrepareToProcessInputEvents();
 	void ProcessInputEvent(AArgusCameraActor* argusCamera, const InputCache& inputEvent);
 	void ProcessSelectInputEvent(bool isAdditive);
+	void ProcessDoubleClickInputEvent(AArgusCameraActor* argusCamera);
 	void ProcessMarqueeSelectInputEvent(const AArgusCameraActor* argusCamera, const bool isAdditive);
 	void ProcessMarqueeAttackActors(TArray<AArgusActor*> attackActors);
 	TArray<AArgusActor*> GetMarqueeActors(const AArgusCameraActor* argusCamera, const ETeamRelationship teamRelationship);
@@ -172,7 +175,7 @@ private:
 	void AddMarqueeSelectedActorsExclusive(const TArray<AArgusActor*>& marqueeSelectedActors);
 	void AddMarqueeSelectedActorsAdditive(const TArray<AArgusActor*>& marqueeSelectedActors);
 	bool CleanUpSelectedActors();
-	void OnSelectedArgusArgusActorsChanged();
+	void OnSelectedArgusActorsChanged();
 
 	void InterruptReticle();
 	void SetReticleState();
@@ -182,6 +185,7 @@ private:
 	FVector m_cachedLastSelectInputWorldSpaceLocation = FVector::ZeroVector;
 	bool m_selectInputDown = false;
 	bool m_canRotateCamera = false;
+	bool m_bDoubleClick = false;
 
 	
 };
