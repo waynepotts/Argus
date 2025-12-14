@@ -97,6 +97,15 @@ public:
 	
 	ETeam GetControlledTeam() override { return m_playerTeam; }
 
+	UFUNCTION(BlueprintCallable, Category = "Argus PlayerController")
+	TArray<AArgusActor*> GetAllTeamActors() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Argus PlayerController")
+	TArray<AArgusActor*> GetAllArgusActors() override;
+
+	UFUNCTION(BlueprintCallable, Category = "Argus PlayerController")
+	TArray<AArgusActor*> GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships) override;
+
 protected:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere)
 	ETeam m_playerTeam = ETeam::TeamA;

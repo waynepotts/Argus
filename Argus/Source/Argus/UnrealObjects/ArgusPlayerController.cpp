@@ -237,6 +237,36 @@ EArgusCursorType AArgusPlayerController::GetArgusCursor() const
 	return m_argusCursor;
 }
 
+TArray<AArgusActor*> AArgusPlayerController::GetAllTeamActors()
+{
+	return GetArgusActorsWithTeamRelationship({ ETeamRelationship::SAMETEAM });
+}
+
+TArray<AArgusActor*> AArgusPlayerController::GetAllArgusActors()
+{
+	const UWorld* world = GetWorld();
+	if (!world)
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	const UArgusGameInstance* gameInstance = world->GetGameInstance<UArgusGameInstance>();
+	if (!gameInstance)
+	{
+		return TArray<AArgusActor*>();
+	}
+
+	TArray<AArgusActor*> allActors;
+	GetArgusActorsFromArgusEntityIds(gameInstance->GetAllRegisteredArgusEntityIds(), allActors);
+	return allActors;
+}
+
+TArray<AArgusActor*> AArgusPlayerController::GetArgusActorsWithTeamRelationship(const TSet<ETeamRelationship> relationships)
+{
+	const ETeam playerTeam = GetPlayerTeam();
+	return GetAllArgusActors().FilterByPredicate([playerTeam, relationships](AArgusActor* actor) { return relationships.Contains(actor->GetEntity().GetTeamRelationship(playerTeam)); });
+}
+
 void AArgusPlayerController::BeginPlay()
 {
 	m_argusCameraActor = Cast<AArgusCameraActor>(UGameplayStatics::GetActorOfClass(GetWorld(), AArgusCameraActor::StaticClass()));
